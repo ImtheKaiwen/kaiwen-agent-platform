@@ -1,4 +1,4 @@
-import type { AgentArtifact, AgentEvent } from "@kaiwen/agent-protocol";
+import type { AgentArtifact, AgentEvent } from "@imthekaiwen/agent-protocol";
 
 export type IslandMode =
   | "idle"

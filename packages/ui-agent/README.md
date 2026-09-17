@@ -1,4 +1,4 @@
-# @kaiwen/agent-ui
+# @imthekaiwen/agent-ui
 
 Headless, framework-neutral browser runtime plus optional React bindings for the
 Kaiwen Agent Platform. Product applications keep ownership of routing, modals,
@@ -22,7 +22,7 @@ import {
   ActionRegistry,
   AgentUIRuntime,
   HttpSseTransport,
-} from "@kaiwen/agent-ui";
+} from "@imthekaiwen/agent-ui";
 
 const actions = new ActionRegistry().register({
   name: "navigate",
@@ -49,7 +49,7 @@ await runtime.submit("Show me the products");
 ## React setup
 
 ```tsx
-import { AgentUIProvider, DynamicIsland } from "@kaiwen/agent-ui/react";
+import { AgentUIProvider, DynamicIsland } from "@imthekaiwen/agent-ui/react";
 
 <AgentUIProvider runtime={runtime} sessionId="session-id">
   <DynamicIsland

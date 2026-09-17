@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { AgentEvent } from "@kaiwen/agent-protocol";
+import type { AgentEvent } from "@imthekaiwen/agent-protocol";
 
 import { HttpSseTransport } from "../src/index.js";
 

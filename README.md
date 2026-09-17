@@ -16,7 +16,7 @@ tools, prompts, persistence models, and visual themes.
 
 ```bash
 pip install "kaiwen-agent[openai]"
-npm install @kaiwen/agent-protocol @kaiwen/agent-ui
+npm install @imthekaiwen/agent-protocol @imthekaiwen/agent-ui
 ```
 
 The project is currently an alpha. Pin exact versions in consuming applications.

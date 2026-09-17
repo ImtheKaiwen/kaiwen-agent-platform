@@ -4,12 +4,12 @@ import {
   ActionRegistry,
   AgentUIRuntime,
   HttpSseTransport,
-} from "@kaiwen/agent-ui";
+} from "@imthekaiwen/agent-ui";
 import {
   AgentUIProvider,
   DynamicIsland,
   ReactArtifactRegistry,
-} from "@kaiwen/agent-ui/react";
+} from "@imthekaiwen/agent-ui/react";
 
 const artifacts = new ReactArtifactRegistry().register("project_card", ({ artifact }) => (
   <article>

@@ -1,4 +1,4 @@
-import type { ClientAction } from "@kaiwen/agent-protocol";
+import type { ClientAction } from "@imthekaiwen/agent-protocol";
 
 export interface ActionContext {
   signal: AbortSignal;

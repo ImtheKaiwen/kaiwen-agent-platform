@@ -1,4 +1,4 @@
-import type { AgentArtifact, ArtifactType } from "@kaiwen/agent-protocol";
+import type { AgentArtifact, ArtifactType } from "@imthekaiwen/agent-protocol";
 import type { ComponentType, ReactNode } from "react";
 
 export type ReactArtifactRenderer = ComponentType<{ artifact: AgentArtifact }>;

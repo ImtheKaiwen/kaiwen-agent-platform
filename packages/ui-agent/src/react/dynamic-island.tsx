@@ -1,4 +1,4 @@
-import type { AgentArtifact } from "@kaiwen/agent-protocol";
+import type { AgentArtifact } from "@imthekaiwen/agent-protocol";
 import { type CSSProperties, type FormEvent, type ReactNode, useState } from "react";
 
 import type { IslandMode } from "../runtime/state.js";

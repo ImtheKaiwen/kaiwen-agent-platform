@@ -1,4 +1,4 @@
-import { AGENT_EVENT_TYPES, type AgentEvent } from "@kaiwen/agent-protocol";
+import { AGENT_EVENT_TYPES, type AgentEvent } from "@imthekaiwen/agent-protocol";
 
 import type { ClientActionResult } from "../actions/types.js";
 import type {

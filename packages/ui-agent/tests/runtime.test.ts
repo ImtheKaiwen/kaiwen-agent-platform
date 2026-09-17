@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { AgentEvent, AgentEventType } from "@kaiwen/agent-protocol";
+import type { AgentEvent, AgentEventType } from "@imthekaiwen/agent-protocol";
 
 import {
   ActionRegistry,

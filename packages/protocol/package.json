@@ -1,5 +1,5 @@
 {
-  "name": "@kaiwen/agent-protocol",
+  "name": "@imthekaiwen/agent-protocol",
   "version": "0.1.0-alpha.1",
   "type": "module",
   "description": "Versioned contracts for the Kaiwen Agent Platform",

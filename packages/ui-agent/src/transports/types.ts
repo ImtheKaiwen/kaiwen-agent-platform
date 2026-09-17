@@ -1,4 +1,4 @@
-import type { AgentEvent, ArtifactType } from "@kaiwen/agent-protocol";
+import type { AgentEvent, ArtifactType } from "@imthekaiwen/agent-protocol";
 
 import type { ActionCapability, ClientActionResult } from "../actions/types.js";
 

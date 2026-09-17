@@ -9,5 +9,5 @@ export default defineConfig({
   dts: true,
   clean: true,
   external: ["react", "react/jsx-runtime"],
-  noExternal: ["@kaiwen/agent-protocol"],
+  noExternal: ["@imthekaiwen/agent-protocol"],
 });

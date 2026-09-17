@@ -6,13 +6,12 @@ packages:
 | Registry | Package | Purpose |
 | --- | --- | --- |
 | PyPI | `kaiwen-agent` | Trusted server runtime |
-| npm | `@kaiwen/agent-protocol` | Shared contracts and schemas |
-| npm | `@kaiwen/agent-ui` | Headless browser and React runtime |
+| npm | `@imthekaiwen/agent-protocol` | Shared contracts and schemas |
+| npm | `@imthekaiwen/agent-ui` | Headless browser and React runtime |
 
 ## One-time registry setup
 
-1. Create or verify the public `kaiwen` organization on npm and grant the
-   publishing account access.
+1. Verify that the `imthekaiwen` npm account can publish under its own scope.
 2. Configure npm trusted publishing for this GitHub repository and the `npm`
    environment for both scoped packages.
 3. Configure a PyPI pending trusted publisher for `kaiwen-agent`, using this

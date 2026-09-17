@@ -9,7 +9,7 @@ credentials or unrestricted browser control in the client.
 
 ## Required sequence
 
-1. Install `@kaiwen/agent-ui`, `@kaiwen/agent-protocol`, and the host project's
+1. Install `@imthekaiwen/agent-ui`, `@imthekaiwen/agent-protocol`, and the host project's
    compatible React version.
 2. Create an `ActionRegistry` containing only product-approved semantic actions.
 3. Give every action a strict JSON Schema with `additionalProperties: false`.
@@ -33,7 +33,7 @@ The reference transport expects:
 - `POST {baseUrl}/capabilities`;
 - `POST {baseUrl}/actions/result`.
 
-All events use `@kaiwen/agent-protocol`. Authentication, session ownership,
+All events use `@imthekaiwen/agent-protocol`. Authentication, session ownership,
 permissions, approval policy, rate limits, and model keys stay on the server.
 
 ## Completion criteria

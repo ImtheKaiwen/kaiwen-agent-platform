@@ -6,9 +6,9 @@ models, routes, branding, and tools belong in consuming applications.
 ## Package selection
 
 - Python orchestration, providers, tools, persistence, tasks: `kaiwen-agent`.
-- Shared event/action/artifact contracts: `@kaiwen/agent-protocol`.
+- Shared event/action/artifact contracts: `@imthekaiwen/agent-protocol`.
 - Browser state, transports, semantic client actions, React UI:
-  `@kaiwen/agent-ui` and `@kaiwen/agent-ui/react`.
+  `@imthekaiwen/agent-ui` and `@imthekaiwen/agent-ui/react`.
 
 Read `docs/architecture.md` before changing boundaries. For a frontend
 integration, read `packages/ui-agent/INTEGRATION.md`. For runnable patterns, use

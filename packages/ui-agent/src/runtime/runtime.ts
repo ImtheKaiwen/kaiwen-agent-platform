@@ -1,4 +1,4 @@
-import type { AgentEvent, ArtifactType, ClientAction } from "@kaiwen/agent-protocol";
+import type { AgentEvent, ArtifactType, ClientAction } from "@imthekaiwen/agent-protocol";
 
 import { ActionRegistry } from "../actions/registry.js";
 import type { AgentTransport, Dispose } from "../transports/types.js";

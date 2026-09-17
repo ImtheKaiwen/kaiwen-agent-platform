@@ -1,5 +1,5 @@
 {
-  "name": "@kaiwen/agent-ui",
+  "name": "@imthekaiwen/agent-ui",
   "version": "0.1.0-alpha.1",
   "type": "module",
   "description": "Headless semantic UI runtime for Kaiwen Agent Platform",
@@ -28,7 +28,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@kaiwen/agent-protocol": "0.1.0-alpha.1",
+    "@imthekaiwen/agent-protocol": "0.1.0-alpha.1",
     "ajv": "^8.17.1"
   },
   "peerDependencies": {

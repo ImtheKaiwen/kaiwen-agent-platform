@@ -7,8 +7,8 @@
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
-    "check:protocol": "npm run check --workspace @kaiwen/agent-protocol",
-    "pack:check": "npm pack --dry-run --workspace @kaiwen/agent-protocol && npm pack --dry-run --workspace @kaiwen/agent-ui",
+    "check:protocol": "npm run check --workspace @imthekaiwen/agent-protocol",
+    "pack:check": "npm pack --dry-run --workspace @imthekaiwen/agent-protocol && npm pack --dry-run --workspace @imthekaiwen/agent-ui",
     "test": "npm run test --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present"
   },

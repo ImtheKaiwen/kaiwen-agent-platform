@@ -6,9 +6,9 @@ modifies a consuming project.
 ## Architecture in one minute
 
 `kaiwen-agent` runs on the trusted server and owns model calls, tool policy,
-approvals, state, and events. `@kaiwen/agent-ui` runs in the browser and owns UI
+approvals, state, and events. `@imthekaiwen/agent-ui` runs in the browser and owns UI
 state plus a narrow allowlist of semantic host actions. Both sides communicate
-with versioned contracts from `@kaiwen/agent-protocol`.
+with versioned contracts from `@imthekaiwen/agent-protocol`.
 
 The product supplies its own domain tools, authorization context, prompts,
 persistence adapter, routes, visual theme, and artifact components. The reusable

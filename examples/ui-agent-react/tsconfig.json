@@ -10,8 +10,8 @@
     "lib": ["ES2022", "DOM"],
     "baseUrl": ".",
     "paths": {
-      "@kaiwen/agent-ui": ["../../packages/ui-agent/src/index.ts"],
-      "@kaiwen/agent-ui/react": ["../../packages/ui-agent/src/react/index.ts"]
+      "@imthekaiwen/agent-ui": ["../../packages/ui-agent/src/index.ts"],
+      "@imthekaiwen/agent-ui/react": ["../../packages/ui-agent/src/react/index.ts"]
     }
   },
   "include": ["App.tsx"]

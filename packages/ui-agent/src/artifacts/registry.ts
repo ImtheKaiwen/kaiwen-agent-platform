@@ -1,4 +1,4 @@
-import type { AgentArtifact, ArtifactType } from "@kaiwen/agent-protocol";
+import type { AgentArtifact, ArtifactType } from "@imthekaiwen/agent-protocol";
 
 export type ArtifactRenderer<TResult> = (artifact: AgentArtifact) => TResult;
 

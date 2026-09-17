@@ -8,8 +8,8 @@ Product application
 
 Browser application
   -> product-owned visual theme and semantic handlers
-  -> @kaiwen/agent-ui headless runtime
-  -> versioned @kaiwen/agent-protocol events
+  -> @imthekaiwen/agent-ui headless runtime
+  -> versioned @imthekaiwen/agent-protocol events
 ```
 
 The backend is the decision authority. Browser actions are semantic, allowlisted,
