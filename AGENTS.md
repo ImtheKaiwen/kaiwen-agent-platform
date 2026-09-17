@@ -1,0 +1,39 @@
+# Kaiwen Agent Platform — coding-agent guide
+
+This repository is the reusable platform. Product-specific prompts, database
+models, routes, branding, and tools belong in consuming applications.
+
+## Package selection
+
+- Python orchestration, providers, tools, persistence, tasks: `kaiwen-agent`.
+- Shared event/action/artifact contracts: `@kaiwen/agent-protocol`.
+- Browser state, transports, semantic client actions, React UI:
+  `@kaiwen/agent-ui` and `@kaiwen/agent-ui/react`.
+
+Read `docs/architecture.md` before changing boundaries. For a frontend
+integration, read `packages/ui-agent/INTEGRATION.md`. For runnable patterns, use
+the matching directory under `examples/`.
+
+## Non-negotiable invariants
+
+- API keys and provider SDK calls remain server-side.
+- Tools and client actions are deny-by-default and explicitly registered.
+- Side effects use authorization, approval, and idempotency where applicable.
+- Browser actions are semantic; never transmit executable code or DOM selectors.
+- Protocol changes update JSON Schema, TypeScript contracts, fixtures, and tests
+  together.
+- Reusable packages never import a product application.
+
+## Verification
+
+```powershell
+npm.cmd run build
+npm.cmd run typecheck
+npm.cmd test
+.\backend\.venv\Scripts\python.exe -m pytest backend/tests
+.\backend\.venv\Scripts\python.exe -m ruff check backend
+.\backend\.venv\Scripts\python.exe -m mypy backend/src
+```
+
+Publishing is an explicit release action. Never publish from a feature task or
+commit `.env`, tokens, generated databases, or local virtual environments.

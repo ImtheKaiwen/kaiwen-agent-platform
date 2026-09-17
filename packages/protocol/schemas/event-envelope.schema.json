@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kaiwen.dev/agent/v1/event-envelope.schema.json",
+  "title": "Agent event envelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "id", "type", "timestamp", "trace_id", "session_id", "payload"],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "id": { "type": "string", "pattern": "^evt_[A-Za-z0-9_-]+$" },
+    "type": {
+      "type": "string",
+      "enum": [
+        "conversation.input",
+        "conversation.delta",
+        "conversation.completed",
+        "run.started",
+        "run.status",
+        "run.completed",
+        "run.failed",
+        "tool.started",
+        "tool.completed",
+        "tool.failed",
+        "task.created",
+        "task.queued",
+        "task.started",
+        "task.progress",
+        "task.retrying",
+        "task.paused",
+        "task.resumed",
+        "task.completed",
+        "task.failed",
+        "task.cancelled",
+        "resource.waiting",
+        "resource.acquired",
+        "resource.released",
+        "approval.requested",
+        "approval.resolved",
+        "artifact.created",
+        "client.connected",
+        "client.capabilities",
+        "client.state",
+        "client_action.requested",
+        "client_action.result",
+        "client_action.failed"
+      ]
+    },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "trace_id": { "type": "string", "minLength": 1 },
+    "session_id": { "type": "string", "minLength": 1 },
+    "payload": { "type": "object" }
+  }
+}

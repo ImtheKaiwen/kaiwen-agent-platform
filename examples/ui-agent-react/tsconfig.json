@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "skipLibCheck": true,
+    "lib": ["ES2022", "DOM"],
+    "baseUrl": ".",
+    "paths": {
+      "@kaiwen/agent-ui": ["../../packages/ui-agent/src/index.ts"],
+      "@kaiwen/agent-ui/react": ["../../packages/ui-agent/src/react/index.ts"]
+    }
+  },
+  "include": ["App.tsx"]
+}

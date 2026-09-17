@@ -1,0 +1,11 @@
+{
+  "schema_version": "2.0",
+  "id": "invalid-id",
+  "type": "run.started",
+  "timestamp": "2026-09-17T20:00:00Z",
+  "trace_id": "trace_fixture",
+  "session_id": "session_fixture",
+  "payload": {},
+  "unexpected": true
+}
+

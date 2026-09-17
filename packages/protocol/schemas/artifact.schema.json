@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kaiwen.dev/agent/v1/artifact.schema.json",
+  "title": "Agent artifact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "type", "data"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "type": {
+      "enum": ["project_card", "task_progress", "approval_card", "form_draft", "notification", "link"]
+    },
+    "data": { "type": "object" }
+  }
+}
+

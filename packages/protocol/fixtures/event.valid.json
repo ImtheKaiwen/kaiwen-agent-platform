@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0",
+  "id": "evt_fixture_valid",
+  "type": "run.started",
+  "timestamp": "2026-09-17T20:00:00Z",
+  "trace_id": "trace_fixture",
+  "session_id": "session_fixture",
+  "payload": {
+    "agent": "fixture-agent"
+  }
+}
+

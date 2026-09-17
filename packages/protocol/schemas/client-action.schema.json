@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kaiwen.dev/agent/v1/client-action.schema.json",
+  "title": "Semantic client action",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "name", "arguments"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "name": { "type": "string", "pattern": "^[a-z][a-z0-9_.-]*$" },
+    "arguments": { "type": "object" },
+    "timeout_ms": { "type": "integer", "minimum": 100, "maximum": 120000 }
+  }
+}
+

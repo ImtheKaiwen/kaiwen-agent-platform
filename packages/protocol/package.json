@@ -1,0 +1,39 @@
+{
+  "name": "@kaiwen/agent-protocol",
+  "version": "0.1.0-alpha.1",
+  "type": "module",
+  "description": "Versioned contracts for the Kaiwen Agent Platform",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ImtheKaiwen/kaiwen-agent-platform.git",
+    "directory": "packages/protocol"
+  },
+  "keywords": ["agent", "ai", "protocol", "typescript", "json-schema"],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./schemas/*": "./schemas/*"
+  },
+  "files": [
+    "schemas",
+    "dist",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean",
+    "check": "node scripts/check-contracts.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "ajv": "^8.17.1",
+    "tsup": "^8.3.6",
+    "typescript": "^5.7.3"
+  }
+}
