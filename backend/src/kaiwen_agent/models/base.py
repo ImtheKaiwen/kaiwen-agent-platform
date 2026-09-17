@@ -1,5 +1,5 @@
 from collections.abc import Sequence
-from typing import Protocol
+from typing import Any, Protocol
 
 from kaiwen_agent.context import AgentContext
 from kaiwen_agent.tools.definition import ToolDefinition
@@ -14,5 +14,5 @@ class ModelProvider(Protocol):
         context: AgentContext,
         tools: Sequence[ToolDefinition],
         tool_results: Sequence[ToolResult],
-        previous_response_id: str | None,
+        provider_state: Any | None,
     ) -> ModelResponse: ...

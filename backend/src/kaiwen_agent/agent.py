@@ -51,7 +51,7 @@ class Agent:
         await self._emit("run.started", run, trace_id, {"agent": self.name})
         tool_results: list[ToolResult] = []
         pending_tool_results: list[ToolResult] = []
-        previous_response_id: str | None = None
+        provider_state: object | None = None
         total_usage = ModelUsage()
 
         try:
@@ -61,10 +61,10 @@ class Agent:
                     context=effective_context,
                     tools=self.registry.definitions(),
                     tool_results=pending_tool_results,
-                    previous_response_id=previous_response_id,
+                    provider_state=provider_state,
                 )
                 pending_tool_results = []
-                previous_response_id = response.provider_response_id or previous_response_id
+                provider_state = response.provider_state
                 if response.usage is not None:
                     total_usage.input_tokens += response.usage.input_tokens
                     total_usage.output_tokens += response.usage.output_tokens

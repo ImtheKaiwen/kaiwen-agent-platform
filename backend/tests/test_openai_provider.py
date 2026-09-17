@@ -4,7 +4,7 @@ from types import SimpleNamespace
 from typing import Any
 
 from kaiwen_agent import Agent, AgentContext
-from kaiwen_agent.models.openai import OpenAIResponsesProvider
+from kaiwen_agent.models.openai import OpenAIProviderState, OpenAIResponsesProvider
 from kaiwen_agent.types import AgentInput, ToolResult
 
 from .test_agent import create_greeting
@@ -54,13 +54,14 @@ def test_openai_provider_serializes_and_parses_function_calls() -> None:
             ),
             tools=[create_greeting],
             tool_results=[],
-            previous_response_id=None,
+            provider_state=None,
         )
     )
 
     request = client.responses.requests[0]
     assert request["input"] == "Selamla"
     assert request["store"] is False
+    assert request["include"] == ["reasoning.encrypted_content"]
     assert request["safety_identifier"] == "hashed-user"
     assert request["tools"][0]["strict"] is True
     assert request["tools"][0]["name"] == "greeting__create"
@@ -72,7 +73,7 @@ def test_openai_provider_serializes_and_parses_function_calls() -> None:
     assert response.usage.total_tokens == 14
 
 
-def test_openai_provider_submits_tool_outputs_to_previous_response() -> None:
+def test_openai_provider_submits_tool_outputs_with_stateless_history() -> None:
     client = make_client(
         [
             SimpleNamespace(
@@ -103,14 +104,26 @@ def test_openai_provider_submits_tool_outputs_to_previous_response() -> None:
             tool_results=[
                 ToolResult(call_id="call_1", name="greeting.create", output={"ok": True})
             ],
-            previous_response_id="resp_1",
+            provider_state=OpenAIProviderState(
+                input_items=(
+                    {"role": "user", "content": "Selamla"},
+                    {
+                        "type": "function_call",
+                        "call_id": "call_1",
+                        "name": "greeting__create",
+                        "arguments": '{"name":"Kaiwen"}',
+                    },
+                )
+            ),
         )
     )
 
     request = client.responses.requests[0]
-    assert request["previous_response_id"] == "resp_1"
-    assert request["input"][0]["type"] == "function_call_output"
-    assert json.loads(request["input"][0]["output"]) == {"ok": True}
+    assert "previous_response_id" not in request
+    assert request["input"][0] == {"role": "user", "content": "Selamla"}
+    assert request["input"][1]["type"] == "function_call"
+    assert request["input"][2]["type"] == "function_call_output"
+    assert json.loads(request["input"][2]["output"]) == {"ok": True}
     assert request["text"]["format"]["type"] == "json_schema"
     assert response.structured_output == {"answer": "tamam"}
 
@@ -159,4 +172,38 @@ def test_same_agent_core_runs_with_openai_adapter() -> None:
     )
 
     assert result.text == "Selamlama hazır."
-    assert client.responses.requests[1]["previous_response_id"] == "resp_1"
+    continuation = client.responses.requests[1]
+    assert "previous_response_id" not in continuation
+    assert [item["type"] for item in continuation["input"][1:]] == [
+        "function_call",
+        "function_call_output",
+    ]
+
+
+def test_stored_openai_provider_uses_previous_response_id() -> None:
+    client = make_client(
+        [
+            SimpleNamespace(
+                id="resp_2",
+                model="test-model",
+                output_text="Done",
+                output=[],
+                usage=None,
+            )
+        ]
+    )
+    provider = OpenAIResponsesProvider(model="test-model", client=client, store=True)
+
+    asyncio.run(
+        provider.respond(
+            AgentInput(text="ignored"),
+            context=AgentContext(session_id="session_1"),
+            tools=[],
+            tool_results=[ToolResult(call_id="call_1", name="greeting.create", output={})],
+            provider_state=OpenAIProviderState(previous_response_id="resp_1"),
+        )
+    )
+
+    request = client.responses.requests[0]
+    assert request["previous_response_id"] == "resp_1"
+    assert "include" not in request

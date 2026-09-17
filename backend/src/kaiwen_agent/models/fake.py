@@ -1,5 +1,6 @@
 from collections import deque
 from collections.abc import Iterable, Sequence
+from typing import Any
 
 from kaiwen_agent.context import AgentContext
 from kaiwen_agent.tools.definition import ToolDefinition
@@ -19,9 +20,9 @@ class FakeModelProvider:
         context: AgentContext,
         tools: Sequence[ToolDefinition],
         tool_results: Sequence[ToolResult],
-        previous_response_id: str | None,
+        provider_state: Any | None,
     ) -> ModelResponse:
-        del agent_input, context, tools, tool_results, previous_response_id
+        del agent_input, context, tools, tool_results, provider_state
         if not self._responses:
             raise RuntimeError("FakeModelProvider has no queued response")
         return self._responses.popleft()

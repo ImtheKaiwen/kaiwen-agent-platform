@@ -41,6 +41,7 @@ class ModelResponse(BaseModel):
     text: str | None = None
     tool_calls: list[ToolCall] = Field(default_factory=list)
     provider_response_id: str | None = None
+    provider_state: Any | None = None
     structured_output: Any | None = None
     usage: ModelUsage | None = None
     model: str | None = None

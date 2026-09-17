@@ -4,6 +4,7 @@ import json
 import re
 from collections.abc import Mapping, Sequence
 from copy import deepcopy
+from dataclasses import dataclass
 from typing import Any
 
 from kaiwen_agent.context import AgentContext
@@ -15,6 +16,12 @@ from kaiwen_agent.types import (
     ToolCall,
     ToolResult,
 )
+
+
+@dataclass(frozen=True, slots=True)
+class OpenAIProviderState:
+    previous_response_id: str | None = None
+    input_items: tuple[dict[str, Any], ...] = ()
 
 
 class OpenAIResponsesProvider:
@@ -55,7 +62,7 @@ class OpenAIResponsesProvider:
         context: AgentContext,
         tools: Sequence[ToolDefinition],
         tool_results: Sequence[ToolResult],
-        previous_response_id: str | None,
+        provider_state: Any | None,
     ) -> ModelResponse:
         provider_names = {
             self._provider_tool_name(definition.name): definition.name for definition in tools
@@ -63,17 +70,21 @@ class OpenAIResponsesProvider:
         if len(provider_names) != len(tools):
             raise ValueError("Tool names collide after OpenAI-compatible normalization")
 
+        state = provider_state if isinstance(provider_state, OpenAIProviderState) else None
+        request_input = self._build_input(agent_input, tool_results, state)
         request: dict[str, Any] = {
             "model": self.model,
-            "input": self._build_input(agent_input, tool_results, previous_response_id),
+            "input": request_input,
             "tools": [self._serialize_tool(definition) for definition in tools],
             "store": self.store,
             "parallel_tool_calls": self.parallel_tool_calls,
         }
         if self.instructions:
             request["instructions"] = self.instructions
-        if previous_response_id:
-            request["previous_response_id"] = previous_response_id
+        if self.store and state and state.previous_response_id:
+            request["previous_response_id"] = state.previous_response_id
+        if not self.store:
+            request["include"] = ["reasoning.encrypted_content"]
         if self.output_schema is not None:
             request["text"] = {
                 "format": {
@@ -109,27 +120,81 @@ class OpenAIResponsesProvider:
             text=output_text,
             tool_calls=calls,
             provider_response_id=getattr(response, "id", None),
+            provider_state=self._next_state(response, request_input),
             structured_output=structured_output,
             usage=self._parse_usage(getattr(response, "usage", None)),
             model=getattr(response, "model", self.model),
         )
 
-    @staticmethod
     def _build_input(
+        self,
         agent_input: AgentInput,
         tool_results: Sequence[ToolResult],
-        previous_response_id: str | None,
-    ) -> str | list[dict[str, str]]:
-        if previous_response_id:
-            return [
-                {
-                    "type": "function_call_output",
-                    "call_id": result.call_id,
-                    "output": json.dumps(result.output, ensure_ascii=False, default=str),
-                }
-                for result in tool_results
-            ]
+        state: OpenAIProviderState | None,
+    ) -> str | list[dict[str, Any]]:
+        tool_outputs = [
+            {
+                "type": "function_call_output",
+                "call_id": result.call_id,
+                "output": json.dumps(result.output, ensure_ascii=False, default=str),
+            }
+            for result in tool_results
+        ]
+        if self.store and state and state.previous_response_id:
+            return tool_outputs
+        if not self.store and state:
+            return [*deepcopy(list(state.input_items)), *tool_outputs]
         return agent_input.text
+
+    def _next_state(
+        self,
+        response: Any,
+        request_input: str | list[dict[str, Any]],
+    ) -> OpenAIProviderState:
+        response_id = getattr(response, "id", None)
+        if self.store:
+            return OpenAIProviderState(previous_response_id=response_id)
+
+        if isinstance(request_input, str):
+            input_items: list[dict[str, Any]] = [
+                {
+                    "role": "user",
+                    "content": request_input,
+                }
+            ]
+        else:
+            input_items = deepcopy(request_input)
+        input_items.extend(self._serialize_output_item(item) for item in response.output)
+        return OpenAIProviderState(input_items=tuple(input_items))
+
+    @staticmethod
+    def _serialize_output_item(item: Any) -> dict[str, Any]:
+        model_dump = getattr(item, "model_dump", None)
+        if callable(model_dump):
+            dumped = model_dump(mode="json", exclude_none=True)
+            if isinstance(dumped, dict):
+                return dumped
+        if isinstance(item, Mapping):
+            return deepcopy(dict(item))
+
+        fields = (
+            "type",
+            "id",
+            "call_id",
+            "name",
+            "arguments",
+            "status",
+            "role",
+            "content",
+            "summary",
+            "encrypted_content",
+            "phase",
+        )
+        return {
+            field: deepcopy(getattr(item, field))
+            for field in fields
+            if getattr(item, field, None) is not None
+        }
 
     @staticmethod
     def _serialize_tool(definition: ToolDefinition) -> dict[str, Any]:

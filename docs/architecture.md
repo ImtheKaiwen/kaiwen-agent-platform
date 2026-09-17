@@ -18,10 +18,12 @@ not part of the protocol.
 
 ## Text provider boundary
 
-The core calls a small `ModelProvider` protocol. Provider response IDs remain local
-to an individual run and are passed back explicitly, so a provider adapter can be
-shared by concurrent sessions without sharing conversation state. OpenAI integration
-is an optional adapter and does not leak SDK types into the core.
+The core calls a small `ModelProvider` protocol. Opaque provider state remains local
+to an individual run and is passed back explicitly, so a provider adapter can be
+shared by concurrent sessions without sharing conversation state. The OpenAI adapter
+uses response IDs when storage is enabled and carries response output items when
+running statelessly. OpenAI integration is optional and does not leak SDK types into
+the core.
 
 ## Tool safety order
 
