@@ -29,6 +29,11 @@ implementation status for the reusable packages.
 - [x] Phase R2.1: trusted backend sideband attachment for existing browser WebRTC
       sessions, strict delegated tool schemas, identity binding, and safe tool
       execution without restarting the Live session or sending primary audio.
+- [x] Phase R8: provider-neutral inbound phone contracts, retry-safe webhook decision
+      claims, OpenAI Live direct-SIP controls, Twilio PSTN-to-SIP origination,
+      phone-channel realtime records, and DTMF normalization. Provider provisioning
+      and product routing remain consumer deployment concerns; scheduled objectives
+      and automatic calls remain R9.
 
 ## Next
 
@@ -38,8 +43,6 @@ implementation status for the reusable packages.
 - [ ] Phase R6: production tenant isolation, quotas, policy configuration, and
       tenant-scoped observability.
 - [ ] Phase R7: production scaling, distributed coordination, recovery, and load tests.
-- [ ] Phase R8: optional telephony gateway and phone channel adapters. Phone media must
-      enter the same Realtime Core; providers must not bypass policy or persistence.
 - [ ] Phase R9: scheduled/objective calls, daily reports, explicit consent, and call
       summaries written through the memory policy.
 - [ ] Phase R10: security hardening, abuse controls, retention enforcement, and

@@ -28,6 +28,7 @@ class RealtimeEventType(StrEnum):
     TRANSCRIPT_DELTA = "realtime.transcript.delta"
     TRANSCRIPT_COMPLETED = "realtime.transcript.completed"
     AUDIO_OUTPUT = "realtime.audio.output"
+    DTMF_RECEIVED = "realtime.dtmf.received"
     USAGE_UPDATED = "realtime.usage.updated"
     ERROR = "realtime.error"
 

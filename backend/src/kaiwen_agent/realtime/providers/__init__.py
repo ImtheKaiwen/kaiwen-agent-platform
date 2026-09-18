@@ -19,6 +19,12 @@ from kaiwen_agent.realtime.providers.openai_live_sideband import (
     OpenAILiveSidebandService,
     OpenAILiveSidebandToolBridge,
 )
+from kaiwen_agent.realtime.providers.openai_live_sip import (
+    OpenAILiveSIPHTTPTransport,
+    OpenAILiveSIPService,
+    UrllibOpenAILiveSIPHTTPTransport,
+    parse_verified_openai_live_sip_event,
+)
 
 __all__ = [
     "OpenAILiveConnection",
@@ -30,12 +36,16 @@ __all__ = [
     "OpenAILiveSidebandConnection",
     "OpenAILiveSidebandService",
     "OpenAILiveSidebandToolBridge",
+    "OpenAILiveSIPHTTPTransport",
+    "OpenAILiveSIPService",
     "OpenAILiveSocket",
     "OpenAILiveSocketConnector",
     "OpenAILiveTransportUnavailableError",
     "OpenAILiveWebRTCService",
     "OpenAILiveWebRTCSession",
+    "UrllibOpenAILiveSIPHTTPTransport",
     "UrllibOpenAILiveHTTPTransport",
     "WebsocketsOpenAILiveConnector",
     "normalize_openai_live_event",
+    "parse_verified_openai_live_sip_event",
 ]

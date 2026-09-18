@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.4.0a1 — 2026-09-24
+
+- Add provider-neutral inbound phone-call contracts and retry-safe webhook decision
+  deduplication.
+- Add the OpenAI Live direct-SIP accept, reject, transfer, and hangup adapter.
+- Add a Twilio outbound PSTN-to-SIP adapter with TLS/SRTP-ready SIP targets and
+  allowlisted custom SIP binding headers.
+- Convert accepted SIP calls into normal phone-channel realtime session records so
+  existing sideband tools, permissions, approvals, idempotency, and audit can be reused.
+- Parse only already-verified `live.transport.incoming` events and keep SIP headers as
+  untrusted metadata.
+- Normalize received DTMF digits without treating them as client commands.
+
 ## 0.3.0a1 — 2026-09-18
 
 - Add trusted OpenAI Live sideband attachment for existing browser WebRTC sessions.

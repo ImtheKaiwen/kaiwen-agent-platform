@@ -368,6 +368,15 @@ def normalize_openai_live_event(
         )
     if event_type == "session.output_audio.delta":
         return _provider_event(RealtimeEventType.AUDIO_OUTPUT, event_id, event)
+    if event_type == "transport.dtmf.received":
+        digit = event.get("event")
+        if isinstance(digit, str) and digit in "0123456789*#ABCD":
+            return RealtimeProviderEvent(
+                type=RealtimeEventType.DTMF_RECEIVED,
+                provider_event_id=event_id,
+                payload={"digit": digit},
+            )
+        return None
     if event_type == "session.usage.updated":
         return _provider_event(
             RealtimeEventType.USAGE_UPDATED,

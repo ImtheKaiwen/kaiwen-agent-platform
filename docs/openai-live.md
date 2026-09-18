@@ -5,7 +5,7 @@ provider-neutral Realtime Core. Provider SDK types do not enter core models.
 
 ## Current support boundary
 
-`0.3.0a1` supports a primary server WebSocket, server-authorized browser WebRTC
+`0.4.0a1` supports a primary server WebSocket, server-authorized browser WebRTC
 bootstrap, and trusted backend sideband attachment to an existing Live session. The
 sideband uses the official `/v1/live/sessions/{session_id}/attach` contract. It never
 sends `session.start` or primary audio, and closing it does not close the browser or
@@ -131,12 +131,48 @@ The connection verifies that the tool context matches the logical realtime sessi
 tenant, and user used during attachment. Provider session IDs remain transport
 metadata and never become authorization identities.
 
+## Direct SIP phone calls
+
+`OpenAILiveSIPService` implements the trusted control plane for inbound GPT-Live SIP
+sessions. A consuming application verifies the OpenAI webhook signature before calling
+`parse_verified_openai_live_sip_event`, atomically claims the webhook event in a durable
+`IncomingCallDecisionStore`, and applies its own caller authorization and routing policy.
+SIP headers are untrusted metadata and never establish user or tenant identity.
+
+```python
+event = client.webhooks.unwrap(raw_body, request_headers)
+call = parse_verified_openai_live_sip_event(event.model_dump(mode="json"))
+
+if await decisions.claim(call.event_id):
+    try:
+        session = await sip.accept(
+            call,
+            config=RealtimeSessionConfig(provider="openai-live", model="gpt-live-1"),
+            conversation_id=conversation_id,
+            tenant_id=trusted_tenant_id,
+            user_id=trusted_user_id,
+        )
+        await decisions.complete(call.event_id)
+    except Exception:
+        await decisions.release(call.event_id)
+        raise
+```
+
+The returned phone-channel record attaches to the same sideband service and tool bridge
+used by browser voice. SIP carries primary audio while the application retains tool
+authority. `reject`, `refer`, and `hangup` map to the official Live controls.
+
+The in-memory decision store is a local reference only. Production webhook handlers
+need an atomic durable adapter. OpenAI Live direct SIP accepts inbound calls; outbound
+provider-originated and scheduled calls remain product/provider integration work.
+
 ## Normalized events
 
 The adapter currently maps:
 
 - input/output transcript fragments to `realtime.transcript.delta`;
 - output audio chunks to `realtime.audio.output`;
+- received phone keypad digits to `realtime.dtmf.received`;
 - cumulative usage to `realtime.usage.updated`;
 - nested completed Responses events to `realtime.turn.completed`;
 - terminal session and error events to durable provider events.
