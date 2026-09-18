@@ -52,6 +52,9 @@ class AgentTask(BaseModel):
     description: str = ""
     agent_id: str = Field(min_length=1)
     session_id: str = "default"
+    tenant_id: str | None = None
+    user_id: str | None = None
+    conversation_id: str | None = None
     trace_id: str = Field(default_factory=lambda: f"trace_{uuid4().hex}")
     status: TaskStatus = TaskStatus.PENDING
     parent_id: str | None = None

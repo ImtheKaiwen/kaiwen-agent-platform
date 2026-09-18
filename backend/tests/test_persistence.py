@@ -4,6 +4,7 @@ from kaiwen_agent.audit import AuditRecord, RedactingAuditStore
 from kaiwen_agent.control import RunControl, TaskCheckpoint
 from kaiwen_agent.events import AgentEvent
 from kaiwen_agent.persistence.sqlite import SQLitePersistence
+from kaiwen_agent.realtime import ConversationMessage, ConversationModality, ConversationRole
 from kaiwen_agent.sessions import SessionRecord
 from kaiwen_agent.tasks import AgentTask, TaskStatus
 from kaiwen_agent.types import AgentRun
@@ -134,3 +135,34 @@ def test_run_control_continues_durable_checkpoint_sequence(tmp_path) -> None:
         assert latest.state == {"step": 2}
 
     asyncio.run(scenario())
+
+
+def test_conversation_messages_are_durable_and_tenant_scoped(tmp_path) -> None:
+    database = tmp_path / "conversations.sqlite3"
+
+    async def write() -> str:
+        store = SQLitePersistence(database)
+        message = ConversationMessage(
+            conversation_id="conversation_1",
+            tenant_id="tenant_1",
+            user_id="user_1",
+            role=ConversationRole.USER,
+            modality=ConversationModality.AUDIO,
+            text="Merhaba",
+        )
+        await store.append_message(message)
+        return message.id
+
+    message_id = asyncio.run(write())
+
+    async def read() -> None:
+        store = SQLitePersistence(database)
+        messages = await store.list_messages(
+            tenant_id="tenant_1", conversation_id="conversation_1"
+        )
+        assert [message.id for message in messages] == [message_id]
+        assert await store.list_messages(
+            tenant_id="tenant_2", conversation_id="conversation_1"
+        ) == []
+
+    asyncio.run(read())

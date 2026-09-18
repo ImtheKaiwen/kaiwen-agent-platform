@@ -18,9 +18,31 @@ implementation status for the reusable packages.
 - [x] Phase F: headless TypeScript UI runtime, semantic action registry, HTTP/SSE
       transport, capability discovery, React bindings, artifact renderers, and
       Dynamic Island state machine.
+- [x] Phase R1: provider-neutral Realtime Core, explicit session lifecycle,
+      tenant/user isolation, concurrent session limits, connection primitives, and
+      deterministic fake provider.
+- [x] Phase R2: OpenAI Live primary WebSocket adapter, server-authorized WebRTC
+      bootstrap, text/audio commands, barge-in readiness, event normalization, and
+      transport contract tests.
+- [x] Phase R3: tenant-scoped conversation messages, text/voice transcript assembly,
+      SQLite persistence, allowlisted task submission, and task status isolation.
+- [x] Phase R2.1: trusted backend sideband attachment for existing browser WebRTC
+      sessions, strict delegated tool schemas, identity binding, and safe tool
+      execution without restarting the Live session or sending primary audio.
 
 ## Next
 
-- [ ] Phase G: first portfolio integration after core contracts stabilize.
+- [ ] Phase R4 / G: authenticated portfolio admin integration, WebRTC bootstrap route,
+      Dynamic Island voice states, task notifications, and semantic UI dispatch.
+- [ ] Phase R5: short-term context, memory recall, and memory write policy.
+- [ ] Phase R6: production tenant isolation, quotas, policy configuration, and
+      tenant-scoped observability.
+- [ ] Phase R7: production scaling, distributed coordination, recovery, and load tests.
+- [ ] Phase R8: optional telephony gateway and phone channel adapters. Phone media must
+      enter the same Realtime Core; providers must not bypass policy or persistence.
+- [ ] Phase R9: scheduled/objective calls, daily reports, explicit consent, and call
+      summaries written through the memory policy.
+- [ ] Phase R10: security hardening, abuse controls, retention enforcement, and
+      production readiness review.
 
 Publishing, deployment, and GitHub pushes remain separate explicit release steps.

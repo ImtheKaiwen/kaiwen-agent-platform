@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "kaiwen-agent"
-version = "0.1.0a2"
+version = "0.3.0a1"
 description = "Provider-neutral asynchronous agent runtime"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -33,6 +33,9 @@ Issues = "https://github.com/ImtheKaiwen/kaiwen-agent-platform/issues"
 [project.optional-dependencies]
 openai = [
   "openai>=2,<3",
+]
+openai-live = [
+  "websockets>=15,<17",
 ]
 dev = [
   "mypy>=1.14,<2",

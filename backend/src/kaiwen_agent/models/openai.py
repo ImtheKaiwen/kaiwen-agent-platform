@@ -1,13 +1,17 @@
 from __future__ import annotations
 
 import json
-import re
 from collections.abc import Mapping, Sequence
 from copy import deepcopy
 from dataclasses import dataclass
 from typing import Any
 
 from kaiwen_agent.context import AgentContext
+from kaiwen_agent.models.openai_tools import (
+    openai_tool_name,
+    serialize_openai_tool,
+    strict_openai_schema,
+)
 from kaiwen_agent.tools.definition import ToolDefinition
 from kaiwen_agent.types import (
     AgentInput,
@@ -65,7 +69,7 @@ class OpenAIResponsesProvider:
         provider_state: Any | None,
     ) -> ModelResponse:
         provider_names = {
-            self._provider_tool_name(definition.name): definition.name for definition in tools
+            openai_tool_name(definition.name): definition.name for definition in tools
         }
         if len(provider_names) != len(tools):
             raise ValueError("Tool names collide after OpenAI-compatible normalization")
@@ -75,7 +79,7 @@ class OpenAIResponsesProvider:
         request: dict[str, Any] = {
             "model": self.model,
             "input": request_input,
-            "tools": [self._serialize_tool(definition) for definition in tools],
+            "tools": [serialize_openai_tool(definition) for definition in tools],
             "store": self.store,
             "parallel_tool_calls": self.parallel_tool_calls,
         }
@@ -90,7 +94,7 @@ class OpenAIResponsesProvider:
                 "format": {
                     "type": "json_schema",
                     "name": self.output_name,
-                    "schema": self._strict_schema(self.output_schema),
+                    "schema": strict_openai_schema(self.output_schema),
                     "strict": True,
                 }
             }
@@ -195,42 +199,6 @@ class OpenAIResponsesProvider:
             for field in fields
             if getattr(item, field, None) is not None
         }
-
-    @staticmethod
-    def _serialize_tool(definition: ToolDefinition) -> dict[str, Any]:
-        return {
-            "type": "function",
-            "name": OpenAIResponsesProvider._provider_tool_name(definition.name),
-            "description": definition.description,
-            "parameters": OpenAIResponsesProvider._strict_schema(definition.input_schema),
-            "strict": True,
-        }
-
-    @staticmethod
-    def _provider_tool_name(name: str) -> str:
-        normalized = re.sub(r"[^A-Za-z0-9_-]", "__", name)
-        if not normalized or len(normalized) > 64:
-            raise ValueError(f"Tool name cannot be represented for OpenAI: {name}")
-        return normalized
-
-    @staticmethod
-    def _strict_schema(schema: Mapping[str, Any]) -> dict[str, Any]:
-        normalized = deepcopy(dict(schema))
-
-        def visit(node: Any) -> None:
-            if isinstance(node, dict):
-                properties = node.get("properties")
-                if node.get("type") == "object" and isinstance(properties, dict):
-                    node["additionalProperties"] = False
-                    node["required"] = list(properties)
-                for value in node.values():
-                    visit(value)
-            elif isinstance(node, list):
-                for value in node:
-                    visit(value)
-
-        visit(normalized)
-        return normalized
 
     @staticmethod
     def _parse_usage(raw_usage: Any | None) -> ModelUsage | None:

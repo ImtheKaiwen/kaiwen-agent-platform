@@ -8,6 +8,12 @@ persistence choice, and HTTP surface.
 pip install "kaiwen-agent[openai]"
 ```
 
+For OpenAI Live primary WebSocket support:
+
+```bash
+pip install "kaiwen-agent[openai-live]"
+```
+
 ## Minimal agent
 
 ```python
@@ -76,6 +82,13 @@ runtime never stores it and it must never be exposed to browser code.
 - Durable task graphs, workers, checkpoints, mailbox control, resource locks,
   cancellation, and bounded concurrency.
 - Optional OpenAI Responses API adapter.
+- Provider-neutral Realtime sessions, OpenAI Live/WebRTC adapters, durable
+  text-and-voice conversations, and allowlisted background task delegation.
+- Trusted OpenAI Live sideband execution through the same permission, approval,
+  idempotency, and audit pipeline used by text agents.
+
+Realtime usage and integration boundaries are documented in the repository's
+`docs/realtime.md`, `docs/openai-live.md`, and `docs/conversation-bridge.md` files.
 
 ## Side effects
 

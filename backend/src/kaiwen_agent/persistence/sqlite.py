@@ -10,6 +10,7 @@ from typing import TypeVar
 from kaiwen_agent.audit import AuditRecord
 from kaiwen_agent.control.checkpoints import TaskCheckpoint
 from kaiwen_agent.events import AgentEvent
+from kaiwen_agent.realtime.conversation import ConversationMessage
 from kaiwen_agent.sessions import SessionRecord
 from kaiwen_agent.tasks.models import AgentTask, TaskStatus
 from kaiwen_agent.types import AgentRun, utc_now
@@ -234,6 +235,62 @@ class SQLitePersistence:
 
         return await self._run(operation)
 
+    async def append_message(self, message: ConversationMessage) -> None:
+        await self.initialize()
+
+        def operation(connection: sqlite3.Connection) -> None:
+            connection.execute(
+                """INSERT OR IGNORE INTO conversation_messages
+                    (id, tenant_id, conversation_id, user_id, message_json, created_at)
+                VALUES (?, ?, ?, ?, ?, ?)""",
+                (
+                    message.id,
+                    message.tenant_id,
+                    message.conversation_id,
+                    message.user_id,
+                    message.model_dump_json(),
+                    message.created_at.isoformat(),
+                ),
+            )
+
+        await self._run(operation)
+
+    async def list_messages(
+        self,
+        *,
+        tenant_id: str,
+        conversation_id: str,
+        after_id: str | None = None,
+        limit: int = 100,
+    ) -> list[ConversationMessage]:
+        if not 1 <= limit <= 1000:
+            raise ValueError("limit must be between 1 and 1000")
+        await self.initialize()
+
+        def operation(connection: sqlite3.Connection) -> list[ConversationMessage]:
+            after_sequence = 0
+            if after_id is not None:
+                cursor = connection.execute(
+                    """SELECT sequence FROM conversation_messages
+                    WHERE id = ? AND tenant_id = ? AND conversation_id = ?""",
+                    (after_id, tenant_id, conversation_id),
+                ).fetchone()
+                if cursor is None:
+                    return []
+                after_sequence = int(cursor["sequence"])
+            rows = connection.execute(
+                """SELECT message_json FROM conversation_messages
+                WHERE tenant_id = ? AND conversation_id = ? AND sequence > ?
+                ORDER BY sequence ASC LIMIT ?""",
+                (tenant_id, conversation_id, after_sequence, limit),
+            ).fetchall()
+            return [
+                ConversationMessage.model_validate_json(row["message_json"])
+                for row in rows
+            ]
+
+        return await self._run(operation)
+
     async def list_tasks(self, *, status: TaskStatus | None = None) -> list[AgentTask]:
         await self.initialize()
 
@@ -360,6 +417,14 @@ class SQLitePersistence:
             );
             CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
             CREATE INDEX IF NOT EXISTS idx_tasks_parent ON tasks(parent_id);
+            CREATE TABLE IF NOT EXISTS conversation_messages (
+                sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+                id TEXT NOT NULL UNIQUE, tenant_id TEXT NOT NULL,
+                conversation_id TEXT NOT NULL, user_id TEXT NOT NULL,
+                message_json TEXT NOT NULL, created_at TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_conversation_messages_scope_sequence
+                ON conversation_messages(tenant_id, conversation_id, sequence);
             CREATE TABLE IF NOT EXISTS task_checkpoints (
                 id TEXT PRIMARY KEY, task_id TEXT NOT NULL, sequence INTEGER NOT NULL,
                 checkpoint_json TEXT NOT NULL, created_at TEXT NOT NULL,

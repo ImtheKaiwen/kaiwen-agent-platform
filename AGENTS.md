@@ -10,9 +10,10 @@ models, routes, branding, and tools belong in consuming applications.
 - Browser state, transports, semantic client actions, React UI:
   `@imthekaiwen/agent-ui` and `@imthekaiwen/agent-ui/react`.
 
-Read `docs/architecture.md` before changing boundaries. For a frontend
-integration, read `packages/ui-agent/INTEGRATION.md`. For runnable patterns, use
-the matching directory under `examples/`.
+Read `docs/architecture.md`, `docs/AI_CONTEXT.md`, and the accepted records under
+`docs/decisions/` before changing boundaries. For a frontend integration, read
+`packages/ui-agent/INTEGRATION.md`. For runnable patterns, use the matching directory
+under `examples/`.
 
 ## Non-negotiable invariants
 
