@@ -125,8 +125,10 @@ implementation status for the reusable packages.
       regression proving that untrusted output cannot expand the registered toolset,
       concurrent-run provider continuation isolation, and exact owner-scoped event
       reads with fail-closed legacy migration.
-- [ ] Phase U10 hardening: optional document and specialized adapters, the remaining
-      crash/multitenant/failover/load matrices, and expanded developer documentation.
+- [ ] Phase U10 hardening: bounded initial-call provider failover now preserves
+      locality and provider-state affinity; optional document and specialized adapters,
+      the remaining crash/multitenant/load matrices, and expanded developer
+      documentation remain.
 
 - [ ] Phase R4 / G: authenticated portfolio admin integration, WebRTC bootstrap route,
       Dynamic Island voice states, task notifications, and semantic UI dispatch.

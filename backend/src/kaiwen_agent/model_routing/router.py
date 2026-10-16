@@ -34,6 +34,51 @@ class ModelRouter:
         required_locality: DataLocality = DataLocality.CLOUD_ALLOWED,
         required_region: str | None = None,
     ) -> ModelSelection:
+        selections = await self._resolve_candidates(
+            capability=capability,
+            complexity=complexity,
+            policy_context=policy_context,
+            allowed_tiers=allowed_tiers,
+            required_locality=required_locality,
+            required_region=required_region,
+            first_only=True,
+        )
+        return selections[0]
+
+    async def resolve_candidates(
+        self,
+        *,
+        capability: str,
+        complexity: ModelComplexity,
+        policy_context: PolicyContext,
+        allowed_tiers: frozenset[ModelTier] | None = None,
+        required_locality: DataLocality = DataLocality.CLOUD_ALLOWED,
+        required_region: str | None = None,
+    ) -> tuple[ModelSelection, ...]:
+        """Return every compatible, policy-approved route in priority order."""
+
+        return await self._resolve_candidates(
+            capability=capability,
+            complexity=complexity,
+            policy_context=policy_context,
+            allowed_tiers=allowed_tiers,
+            required_locality=required_locality,
+            required_region=required_region,
+            first_only=False,
+        )
+
+    async def _resolve_candidates(
+        self,
+        *,
+        capability: str,
+        complexity: ModelComplexity,
+        policy_context: PolicyContext,
+        allowed_tiers: frozenset[ModelTier] | None,
+        required_locality: DataLocality,
+        required_region: str | None,
+        first_only: bool,
+    ) -> tuple[ModelSelection, ...]:
+
         candidates = [
             route
             for route in self.routes
@@ -41,7 +86,7 @@ class ModelRouter:
             and capability in route.capabilities
             and complexity in route.complexities
             and (allowed_tiers is None or route.tier in allowed_tiers)
-            and _locality_satisfies(
+            and locality_satisfies(
                 route.data_locality,
                 route.regions,
                 required=required_locality,
@@ -49,6 +94,7 @@ class ModelRouter:
             )
         ]
         candidates.sort(key=lambda route: route.priority, reverse=True)
+        selections: list[ModelSelection] = []
         for route in candidates:
             decision = await self.policy_engine.evaluate(
                 policy_context.model_copy(
@@ -71,22 +117,28 @@ class ModelRouter:
             )
             if decision.decision != PolicyDecisionType.ALLOW:
                 continue
-            return ModelSelection(
-                route_id=route.id,
-                provider=route.provider,
-                model=route.model,
-                tier=route.tier,
-                capability=capability,
-                complexity=complexity,
-                data_locality=route.data_locality,
-                regions=route.regions,
+            selections.append(
+                ModelSelection(
+                    route_id=route.id,
+                    provider=route.provider,
+                    model=route.model,
+                    tier=route.tier,
+                    capability=capability,
+                    complexity=complexity,
+                    data_locality=route.data_locality,
+                    regions=route.regions,
+                )
             )
-        raise ModelRouteUnavailableError(
-            f"No policy-allowed model route for {capability}/{complexity.value}"
-        )
+            if first_only:
+                return tuple(selections)
+        if not selections:
+            raise ModelRouteUnavailableError(
+                f"No policy-allowed model route for {capability}/{complexity.value}"
+            )
+        return tuple(selections)
 
 
-def _locality_satisfies(
+def locality_satisfies(
     locality: DataLocality,
     regions: frozenset[str],
     *,

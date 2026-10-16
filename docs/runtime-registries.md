@@ -15,6 +15,15 @@ routes and fails closed when none are policy-approved; it never silently falls b
 to a cloud provider. Region-restricted requests accept an explicitly matching region
 or a local route.
 
+`resolve_candidates()` returns all compatible, policy-approved routes in priority
+order for a trusted host that explicitly enables failover. `FailoverModelProvider`
+revalidates locality and tries the next route only when an adapter raises a specifically
+configured transient exception on the initial call. Catch-all `Exception` fallback is
+rejected. Once a response has established provider state—or tool results need to be
+continued—the route is pinned and any failure is propagated instead of replaying work
+through another provider. Candidates must come from the router; constructing a route
+record is not evidence of policy approval.
+
 `ModelCapabilities` separately describes technical provider/model behavior such as
 context size, output limits, native tool support, structured output, modalities, and
 locality. It does not grant tools, permissions, memory access, or delegation rights.

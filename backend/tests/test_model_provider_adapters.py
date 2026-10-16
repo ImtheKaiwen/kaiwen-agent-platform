@@ -114,6 +114,48 @@ def test_model_router_never_falls_back_to_cloud_for_local_only_data() -> None:
     asyncio.run(scenario())
 
 
+def test_model_router_returns_only_policy_approved_candidates_in_priority_order() -> None:
+    class DenyBlockedRoute:
+        policy_id = "deny-blocked-route"
+
+        async def evaluate(self, context):
+            if context.action == "model.resolve" and context.resource == "blocked":
+                return PolicyDecision(
+                    decision=PolicyDecisionType.DENY,
+                    policy_id=self.policy_id,
+                    rule_id="deny",
+                    reason="test",
+                )
+            return None
+
+    async def scenario() -> None:
+        engine = PolicyEngine(registry=PolicyRegistry([DenyBlockedRoute(), AllowModels()]))
+
+        def route(route_id: str, priority: int) -> ModelRoute:
+            return ModelRoute(
+                id=route_id,
+                provider=f"provider-{route_id}",
+                model=f"model-{route_id}",
+                tier=ModelTier.CHEAP,
+                capabilities=frozenset({"reasoning"}),
+                complexities=frozenset({ModelComplexity.LOW}),
+                priority=priority,
+            )
+
+        selections = await ModelRouter(
+            routes=[route("secondary", 10), route("blocked", 100), route("primary", 20)],
+            policy_engine=engine,
+        ).resolve_candidates(
+            capability="reasoning",
+            complexity=ModelComplexity.LOW,
+            policy_context=_policy_context(),
+        )
+
+        assert [selection.route_id for selection in selections] == ["primary", "secondary"]
+
+    asyncio.run(scenario())
+
+
 class FakeOllamaClient:
     def __init__(self, responses: list[dict[str, Any]]) -> None:
         self.responses = responses

@@ -41,6 +41,8 @@
   remains local to each agent run.
 - Add backward-compatible event owner fields and exact tenant/user/session scoped
   reads, including a fail-closed SQLite migration for historical unowned events.
+- Add policy-approved initial-call model failover with locality revalidation, explicit
+  transient-error classification, and strict provider continuation affinity.
 
 ## 0.4.0a1 — 2026-09-24
 

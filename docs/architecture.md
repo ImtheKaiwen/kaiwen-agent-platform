@@ -35,6 +35,13 @@ uses response IDs when storage is enabled and carries response output items when
 running statelessly. OpenAI integration is optional and does not leak SDK types into
 the core.
 
+Optional text-provider failover is a bounded provider composition, not a second model
+loop. The host supplies ordered routes already approved by `ModelRouter` and creates
+their server-side adapters. Failover occurs only on an explicitly classified transient
+error before any response or tool-result continuation has been accepted. Thereafter,
+opaque continuation state is tagged and pinned to the exact route that produced it;
+it is never replayed against another provider.
+
 ## Realtime provider boundary
 
 `kaiwen_agent.realtime` owns logical live-session state, tenant/user isolation,

@@ -100,13 +100,19 @@ from kaiwen_agent.model_routing import (
 )
 from kaiwen_agent.models import (
     DataLocality,
+    FailoverCandidate,
+    FailoverModelProvider,
+    FailoverProviderState,
     GeminiGenerateContentProvider,
     ModelCapabilities,
     ModelCapabilitiesRegistry,
+    ModelContinuationError,
+    ModelFailoverConfigurationError,
     ModelProviderFactory,
     ModelToolStrategy,
     OllamaChatProvider,
     ProviderRegistry,
+    RetryableModelProviderError,
 )
 from kaiwen_agent.models.base import ModelProvider
 from kaiwen_agent.objectives import ObjectiveManager, ObjectiveStatus
@@ -309,6 +315,9 @@ __all__ = [
     "EvaluationSuite",
     "FakeSpeechRecognizer",
     "FakeSpeechSynthesizer",
+    "FailoverCandidate",
+    "FailoverModelProvider",
+    "FailoverProviderState",
     "HeartbeatMonitor",
     "GeminiGenerateContentProvider",
     "InMemoryLifecycleStore",
@@ -341,6 +350,8 @@ __all__ = [
     "ModelComplexity",
     "ModelCapabilities",
     "ModelCapabilitiesRegistry",
+    "ModelContinuationError",
+    "ModelFailoverConfigurationError",
     "ModelRoute",
     "ModelRouter",
     "ModelTier",
@@ -359,6 +370,7 @@ __all__ = [
     "PromptRegistry",
     "PromptRunRecord",
     "ProviderRegistry",
+    "RetryableModelProviderError",
     "ReplayPlayer",
     "ReplayRecorder",
     "RedisLeaseStore",
