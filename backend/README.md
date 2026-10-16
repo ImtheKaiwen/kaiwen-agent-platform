@@ -86,6 +86,13 @@ reply = await runtime.chat(
 Workflow mode remains unavailable until durable run/recovery and completion-gate
 composition is installed; it never falls back to an unsafe in-memory workflow.
 
+Larger applications can register immutable `AgentDefinition` records and compose
+them through `AgentFactory` plus a strict `WorkspaceProfile`. The factory resolves
+exact prompt and capability versions, constructs a fresh provider instance, validates
+tool visibility against both capability and workspace allowlists, and records the
+selected versions in runtime context. Policy and execution-time permission checks
+remain authoritative; configuration never grants additional access.
+
 `OPENAI_API_KEY` is read by the OpenAI SDK from the server environment. The
 runtime never stores it and it must never be exposed to browser code.
 

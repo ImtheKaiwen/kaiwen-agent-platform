@@ -64,6 +64,13 @@ Add immutable `AgentDefinition`, its registry, a provider registry/factory bound
 and a strict programmatic `WorkspaceProfile`. Resolve tool visibility against
 `ToolRegistry` and declared capabilities, while policy remains authoritative.
 
+Implemented: exact `id@version` agent, prompt, capability, and workspace references
+are resolved before execution. `AgentFactory` rejects missing or out-of-scope tools,
+providers, permissions, memory namespaces, and capability manifests; creates a fresh
+provider-backed `AgentRuntime`; and attaches immutable configuration pins plus a
+deterministic toolset checksum to runtime context. These pins are observational until
+U5 persists them with durable run state.
+
 ### U3 — Context integration and compaction
 
 Compose scoped context for the model request, introduce provider-aware token counting,

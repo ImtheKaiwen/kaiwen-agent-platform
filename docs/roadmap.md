@@ -96,8 +96,9 @@ implementation status for the reusable packages.
       standards-separation, and safe-boundary recovery architecture decisions.
 - [x] Phase U1: minimal `AgentRuntime` composition with explicit mode/autonomy,
       trusted identity, chat fast path, and bounded synchronous action path.
-- [ ] Phase U2-U3: immutable agent/workspace definitions, provider composition,
-      version pins, context integration, model-aware token accounting, and compaction.
+- [x] Phase U2: immutable agent/workspace definitions, provider composition,
+      fail-fast capability validation, and exact in-run version pins.
+- [ ] Phase U3: context integration, model-aware token accounting, and compaction.
 - [ ] Phase U4-U6: standards and evidence gates, durable runtime state/recovery, then
       bounded autonomous single-agent workflows compiled to the existing Task Runtime.
 - [ ] Phase U7-U10: optional teams, Gemini/Ollama capabilities and adapters, speech

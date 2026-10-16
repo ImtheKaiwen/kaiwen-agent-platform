@@ -32,6 +32,8 @@ class AgentRuntime:
         run_store: RunStore | None = None,
         tool_executor: ToolExecutor | None = None,
         services: Mapping[str, Any] | None = None,
+        metadata: Mapping[str, Any] | None = None,
+        default_autonomy: AutonomyLevel = AutonomyLevel.SUPERVISED,
         max_steps: int = 8,
     ) -> None:
         if not name:
@@ -46,6 +48,8 @@ class AgentRuntime:
         self.run_store = run_store or InMemoryRunStore()
         self.tool_executor = tool_executor or ToolExecutor()
         self.services = dict(services or {})
+        self.metadata = dict(metadata or {})
+        self.default_autonomy = default_autonomy
         self.max_steps = max_steps
 
     async def run(
@@ -54,7 +58,7 @@ class AgentRuntime:
         *,
         identity: RuntimeIdentity,
         mode: RunMode = RunMode.CHAT,
-        autonomy: AutonomyLevel = AutonomyLevel.SUPERVISED,
+        autonomy: AutonomyLevel | None = None,
         tool_names: Sequence[str] = (),
         services: Mapping[str, Any] | None = None,
     ) -> AgentResult:
@@ -65,12 +69,16 @@ class AgentRuntime:
         selected_tools = self._select_tools(tool_names) if mode == RunMode.ACTION else ()
         if mode == RunMode.CHAT and tool_names:
             raise ValueError("Chat mode does not expose tools; use action mode explicitly")
+        effective_autonomy = autonomy or self.default_autonomy
         effective_services = {**self.services, **dict(services or {})}
-        context = identity.to_agent_context(
+        effective_identity = identity.model_copy(
+            update={"metadata": {**identity.metadata, **self.metadata}}
+        )
+        context = effective_identity.to_agent_context(
             agent_id=self.name,
             services=effective_services,
             mode=mode,
-            autonomy=autonomy,
+            autonomy=effective_autonomy,
         )
         agent = Agent(
             name=self.name,
@@ -92,7 +100,7 @@ class AgentRuntime:
         text: str,
         *,
         identity: RuntimeIdentity,
-        autonomy: AutonomyLevel = AutonomyLevel.SUPERVISED,
+        autonomy: AutonomyLevel | None = None,
         services: Mapping[str, Any] | None = None,
     ) -> AgentResult:
         return await self.run(
@@ -109,7 +117,7 @@ class AgentRuntime:
         *,
         identity: RuntimeIdentity,
         tool_names: Sequence[str],
-        autonomy: AutonomyLevel = AutonomyLevel.SUPERVISED,
+        autonomy: AutonomyLevel | None = None,
         services: Mapping[str, Any] | None = None,
     ) -> AgentResult:
         return await self.run(

@@ -1,4 +1,5 @@
 from kaiwen_agent.agent import Agent
+from kaiwen_agent.agents import AgentDefinition, AgentDefinitionRegistry, VersionedReference
 from kaiwen_agent.artifacts import (
     ArtifactContext,
     ArtifactCreate,
@@ -74,6 +75,7 @@ from kaiwen_agent.model_routing import (
     ModelRouter,
     ModelTier,
 )
+from kaiwen_agent.models import ModelProviderFactory, ProviderRegistry
 from kaiwen_agent.models.base import ModelProvider
 from kaiwen_agent.objectives import ObjectiveManager, ObjectiveStatus
 from kaiwen_agent.observability import (
@@ -99,11 +101,16 @@ from kaiwen_agent.policy import (
 from kaiwen_agent.prompts import PromptDefinition, PromptRegistry, PromptRunRecord
 from kaiwen_agent.replay import ReplayPlayer, ReplayRecorder, SimulationSideEffectPolicy
 from kaiwen_agent.runtime import (
+    AgentFactory,
     AgentRuntime,
     AutonomyLevel,
+    ConfiguredAgentRuntime,
     RunMode,
+    RuntimeCompositionError,
     RuntimeIdentity,
     RuntimeModeUnavailableError,
+    RuntimeVersionPins,
+    WorkspaceProfile,
 )
 from kaiwen_agent.secrets import EnvironmentSecretProvider, SecretProvider, SecretValue
 from kaiwen_agent.skills import SkillDefinition, SkillRegistry, SkillStep
@@ -117,6 +124,9 @@ from kaiwen_agent.watches import WatchEngine, WatchStrategy
 __all__ = [
     "Agent",
     "AgentContext",
+    "AgentDefinition",
+    "AgentDefinitionRegistry",
+    "AgentFactory",
     "AgentRuntime",
     "AgentJob",
     "AgentJobRef",
@@ -144,6 +154,7 @@ __all__ = [
     "ContextBudget",
     "ContextBuildRequest",
     "ContextBuilder",
+    "ConfiguredAgentRuntime",
     "DeadLetterManager",
     "DelegationPolicy",
     "DelegationRequest",
@@ -175,6 +186,7 @@ __all__ = [
     "MetricRecord",
     "MetricsSink",
     "ModelProvider",
+    "ModelProviderFactory",
     "ModelComplexity",
     "ModelRoute",
     "ModelRouter",
@@ -190,6 +202,7 @@ __all__ = [
     "PromptDefinition",
     "PromptRegistry",
     "PromptRunRecord",
+    "ProviderRegistry",
     "ReplayPlayer",
     "ReplayRecorder",
     "RedisLeaseStore",
@@ -197,8 +210,10 @@ __all__ = [
     "RuntimePolicy",
     "RuntimeMetrics",
     "RunMode",
+    "RuntimeCompositionError",
     "RuntimeIdentity",
     "RuntimeModeUnavailableError",
+    "RuntimeVersionPins",
     "SchedulerTaskRuntimeAdapter",
     "SchedulingPolicy",
     "SessionMemoryManager",
@@ -220,6 +235,8 @@ __all__ = [
     "WakeupManager",
     "WatchEngine",
     "WatchStrategy",
+    "VersionedReference",
+    "WorkspaceProfile",
     "WorkloadKind",
     "tool",
 ]
