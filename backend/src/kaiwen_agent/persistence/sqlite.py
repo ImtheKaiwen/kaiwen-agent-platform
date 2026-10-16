@@ -10,7 +10,7 @@ from typing import TypeVar
 
 from kaiwen_agent.audit import AuditRecord
 from kaiwen_agent.control.checkpoints import TaskCheckpoint
-from kaiwen_agent.events import AgentEvent
+from kaiwen_agent.events import AgentEvent, redact_agent_event
 from kaiwen_agent.jobs.models import TERMINAL_JOB_STATUSES, AgentJob, JobStatus
 from kaiwen_agent.lifecycle.models import (
     LifecycleCycle,
@@ -136,6 +136,7 @@ class SQLitePersistence:
 
     async def append(self, event: AgentEvent) -> None:
         await self.initialize()
+        event = redact_agent_event(event)
 
         def operation(connection: sqlite3.Connection) -> None:
             connection.execute(

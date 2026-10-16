@@ -194,6 +194,13 @@ quickstarts are type-checked and executed by CI. The broader hardening matrix an
 specialized optional adapters remain open; this slice does not claim production
 readiness.
 
+Security foundation implemented: canonical durable event payloads redact credential
+keys and recognizable secret values at validation, while built-in memory, SQLite,
+realtime, and SSE boundaries sanitize again before persistence or delivery. A
+provider-free MCP injection regression verifies that untrusted tool output cannot
+register or invoke an undeclared tool. Remaining crash, multitenant, failover, and
+load matrices are still required.
+
 ## Non-goals
 
 - No product routes, prompts, branding, authentication, or domain tools.

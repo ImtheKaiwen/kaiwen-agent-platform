@@ -5,9 +5,12 @@ from enum import StrEnum
 from typing import Any
 from uuid import uuid4
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from kaiwen_agent.audit import SecretRedactor
 from kaiwen_agent.types import utc_now
+
+_EVENT_REDACTOR = SecretRedactor()
 
 
 class RealtimeEventDelivery(StrEnum):
@@ -58,3 +61,16 @@ class RealtimeRuntimeEvent(BaseModel):
     tenant_id: str
     user_id: str
     payload: dict[str, Any] = Field(default_factory=dict)
+
+    @field_validator("payload", mode="after")
+    @classmethod
+    def redact_secrets(cls, payload: dict[str, Any]) -> dict[str, Any]:
+        return _EVENT_REDACTOR.redact(payload)
+
+
+def redact_realtime_event(event: RealtimeRuntimeEvent) -> RealtimeRuntimeEvent:
+    """Return a detached durable realtime event with its current payload redacted."""
+    return event.model_copy(
+        deep=True,
+        update={"payload": _EVENT_REDACTOR.redact(event.payload)},
+    )

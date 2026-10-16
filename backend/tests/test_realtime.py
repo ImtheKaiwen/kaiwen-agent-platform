@@ -12,6 +12,7 @@ from kaiwen_agent.realtime import (
     RealtimeLimits,
     RealtimeMode,
     RealtimeProviderEvent,
+    RealtimeRuntimeEvent,
     RealtimeSessionConfig,
     RealtimeSessionLimitError,
     RealtimeSessionManager,
@@ -19,6 +20,30 @@ from kaiwen_agent.realtime import (
     RealtimeSessionStatus,
     transition_realtime_session,
 )
+
+
+def test_durable_realtime_event_redacts_secrets_at_the_contract_boundary() -> None:
+    event = RealtimeRuntimeEvent(
+        type=RealtimeEventType.ERROR,
+        session_id="session_1",
+        conversation_id="conversation_1",
+        tenant_id="tenant_1",
+        user_id="user_1",
+        payload={
+            "provider_secret": "private-value",
+            "message": "Bearer private-token",
+        },
+    )
+
+    assert event.payload == {
+        "provider_secret": "[REDACTED]",
+        "message": "[REDACTED]",
+    }
+
+    event.payload["api_key"] = "mutated-secret"
+    sink = InMemoryRealtimeEventSink()
+    asyncio.run(sink.append(event))
+    assert sink.events[0].payload["api_key"] == "[REDACTED]"
 
 
 def make_config() -> RealtimeSessionConfig:

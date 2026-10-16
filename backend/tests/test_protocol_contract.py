@@ -22,3 +22,20 @@ def test_python_accepts_canonical_valid_event_fixture() -> None:
 def test_python_rejects_canonical_invalid_event_fixture() -> None:
     with pytest.raises(ValidationError):
         AgentEvent.model_validate(read_fixture("event.invalid.json"))
+
+
+def test_agent_event_redacts_secrets_at_the_contract_boundary() -> None:
+    event = AgentEvent(
+        type="run.failed",
+        trace_id="trace_1",
+        session_id="session_1",
+        payload={
+            "authorization": "Bearer private-value",
+            "message": "Provider rejected sk-abcdefghijklmnop",
+        },
+    )
+
+    assert event.payload == {
+        "authorization": "[REDACTED]",
+        "message": "Provider rejected [REDACTED]",
+    }

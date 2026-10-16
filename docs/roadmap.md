@@ -120,8 +120,11 @@ implementation status for the reusable packages.
       trusted MCP bindings that route through the central tool safety pipeline.
 - [x] Phase U10 DX foundation: credential-free simple-runtime and speech examples
       whose imports and execution are continuously verified by CI.
+- [x] Phase U10 security foundation: durable event payload redaction at validation,
+      built-in persistence/stream defense in depth, and an MCP prompt-injection
+      regression proving that untrusted output cannot expand the registered toolset.
 - [ ] Phase U10 hardening: optional document and specialized adapters, the remaining
-      crash/multitenant/injection/load matrices, and expanded developer documentation.
+      crash/multitenant/failover/load matrices, and expanded developer documentation.
 
 - [ ] Phase R4 / G: authenticated portfolio admin integration, WebRTC bootstrap route,
       Dynamic Island voice states, task notifications, and semantic UI dispatch.

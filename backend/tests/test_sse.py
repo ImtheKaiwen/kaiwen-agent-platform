@@ -19,6 +19,18 @@ def test_encode_sse_uses_id_type_and_json_payload() -> None:
     assert data["payload"] == {"agent": "test"}
 
 
+def test_sse_redacts_payload_mutated_after_event_validation() -> None:
+    event = AgentEvent(
+        id="evt_secret",
+        type="run.failed",
+        trace_id="trace_1",
+        session_id="session_1",
+    )
+    event.payload["authorization"] = "Bearer private-token"
+
+    assert "private-token" not in encode_sse(event)
+
+
 def test_sse_broker_persists_and_fans_out_by_session() -> None:
     async def scenario() -> None:
         sink = InMemoryEventSink()

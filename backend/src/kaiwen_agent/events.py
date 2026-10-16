@@ -4,9 +4,12 @@ from datetime import datetime
 from typing import Any, Literal, Protocol
 from uuid import uuid4
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from kaiwen_agent.audit import SecretRedactor
 from kaiwen_agent.types import utc_now
+
+_EVENT_REDACTOR = SecretRedactor()
 
 EventType = Literal[
     "conversation.input",
@@ -92,6 +95,19 @@ class AgentEvent(BaseModel):
     session_id: str
     payload: dict[str, Any] = Field(default_factory=dict)
 
+    @field_validator("payload", mode="after")
+    @classmethod
+    def redact_secrets(cls, payload: dict[str, Any]) -> dict[str, Any]:
+        return _EVENT_REDACTOR.redact(payload)
+
+
+def redact_agent_event(event: AgentEvent) -> AgentEvent:
+    """Return a detached event with its current payload redacted."""
+    return event.model_copy(
+        deep=True,
+        update={"payload": _EVENT_REDACTOR.redact(event.payload)},
+    )
+
 
 class EventSink(Protocol):
     async def append(self, event: AgentEvent) -> None: ...
@@ -112,7 +128,7 @@ class InMemoryEventSink:
         self.events: list[AgentEvent] = []
 
     async def append(self, event: AgentEvent) -> None:
-        self.events.append(event)
+        self.events.append(redact_agent_event(event))
 
     async def list_events(
         self,

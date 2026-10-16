@@ -62,6 +62,24 @@ def test_sqlite_events_keep_append_order_and_cursor(tmp_path) -> None:
     asyncio.run(scenario())
 
 
+def test_sqlite_events_redact_payload_mutated_after_validation(tmp_path) -> None:
+    async def scenario() -> None:
+        store = SQLitePersistence(tmp_path / "redacted-events.sqlite3")
+        event = AgentEvent(
+            id="evt_secret",
+            type="run.failed",
+            trace_id="trace_1",
+            session_id="session_1",
+        )
+        event.payload["api_key"] = "never-store-this"
+        await store.append(event)
+
+        stored = await store.list_events(session_id="session_1")
+        assert stored[0].payload == {"api_key": "[REDACTED]"}
+
+    asyncio.run(scenario())
+
+
 def test_audit_store_redacts_secrets_before_persistence(tmp_path) -> None:
     async def scenario() -> None:
         persistence = SQLitePersistence(tmp_path / "audit.sqlite3")

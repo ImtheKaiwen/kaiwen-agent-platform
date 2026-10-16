@@ -4,7 +4,11 @@ from collections.abc import AsyncIterator
 from typing import Protocol
 
 from kaiwen_agent.realtime.config import RealtimeSessionConfig
-from kaiwen_agent.realtime.events import RealtimeProviderEvent, RealtimeRuntimeEvent
+from kaiwen_agent.realtime.events import (
+    RealtimeProviderEvent,
+    RealtimeRuntimeEvent,
+    redact_realtime_event,
+)
 
 
 class RealtimeConnection(Protocol):
@@ -41,4 +45,4 @@ class InMemoryRealtimeEventSink:
         self.events: list[RealtimeRuntimeEvent] = []
 
     async def append(self, event: RealtimeRuntimeEvent) -> None:
-        self.events.append(event.model_copy(deep=True))
+        self.events.append(redact_realtime_event(event))

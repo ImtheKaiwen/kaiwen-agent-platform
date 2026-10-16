@@ -5,10 +5,11 @@ import json
 from collections import defaultdict
 from collections.abc import AsyncIterator
 
-from kaiwen_agent.events import AgentEvent, EventSink
+from kaiwen_agent.events import AgentEvent, EventSink, redact_agent_event
 
 
 def encode_sse(event: AgentEvent) -> str:
+    event = redact_agent_event(event)
     data = json.dumps(event.model_dump(mode="json"), ensure_ascii=False, separators=(",", ":"))
     return f"id: {event.id}\nevent: {event.type}\ndata: {data}\n\n"
 
@@ -25,6 +26,7 @@ class SSEEventBroker:
         self._lock = asyncio.Lock()
 
     async def append(self, event: AgentEvent) -> None:
+        event = redact_agent_event(event)
         if self.sink is not None:
             await self.sink.append(event)
         async with self._lock:

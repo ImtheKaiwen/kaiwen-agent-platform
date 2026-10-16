@@ -77,3 +77,15 @@ requires an explicit key allowlist and returns an opaque `SecretValue` whose rep
 serialization mask plaintext. Plaintext is available only through the explicit
 `reveal()` call at the provider integration boundary. Audit redaction also recognizes
 Pydantic secret values. Vault and cloud adapters can implement the same protocol.
+
+Canonical `AgentEvent` and durable `RealtimeRuntimeEvent` payloads are redacted when
+they are validated. Built-in in-memory, SQLite, and SSE event boundaries sanitize the
+current payload again before storing or streaming it, which also protects against a
+payload mutated after model validation. This is defense in depth, not permission to
+place credentials in events: provider secrets must remain inside server-side
+adapters. Ephemeral provider audio/transcript events are transport data and are not
+made durable by this mechanism.
+
+Untrusted tool output, including MCP content, never changes the registered toolset or
+policy. A subsequent model-proposed call still has to resolve to an explicitly
+registered tool and pass schema, permission, policy, and approval checks.
