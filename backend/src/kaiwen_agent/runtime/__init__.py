@@ -1,4 +1,8 @@
-from kaiwen_agent.runtime.agent_runtime import AgentRuntime, RuntimeModeUnavailableError
+from kaiwen_agent.runtime.agent_runtime import (
+    AgentRuntime,
+    ContextWindowExceededError,
+    RuntimeModeUnavailableError,
+)
 from kaiwen_agent.runtime.factory import (
     AgentFactory,
     ConfiguredAgentRuntime,
@@ -12,6 +16,7 @@ __all__ = [
     "AgentFactory",
     "AutonomyLevel",
     "ConfiguredAgentRuntime",
+    "ContextWindowExceededError",
     "RunMode",
     "RuntimeIdentity",
     "RuntimeCompositionError",

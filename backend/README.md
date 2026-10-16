@@ -93,6 +93,13 @@ tool visibility against both capability and workspace allowlists, and records th
 selected versions in runtime context. Policy and execution-time permission checks
 remain authoritative; configuration never grants additional access.
 
+Applications may inject `ContextBuilder`, `ContextWindow`, and
+`ContextCompactionManager` into the runtime. Context collection stays optional for
+simple chat, uses a provider-specific `TokenCounter` when available, and never treats
+lossy session summaries as policy or configuration. Use
+`ArtifactToolResultProcessor` when large tool output should be stored out-of-band and
+represented to the model by an owner-scoped artifact reference.
+
 `OPENAI_API_KEY` is read by the OpenAI SDK from the server environment. The
 runtime never stores it and it must never be exposed to browser code.
 

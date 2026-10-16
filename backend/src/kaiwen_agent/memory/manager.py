@@ -59,17 +59,23 @@ class SessionMemoryManager:
     async def save_session_summary(self, summary: SessionSummary) -> SessionSummary:
         rendered = summary.render()
         if estimate_tokens(rendered) > self.max_summary_tokens:
-            summary_prefix_tokens = estimate_tokens("Summary: ")
-            content_tokens = max(1, self.max_summary_tokens - summary_prefix_tokens)
+            structured = summary.model_copy(update={"summary": ""})
+            structured_tokens = estimate_tokens(structured.render())
+            if structured_tokens > self.max_summary_tokens:
+                raise ValueError("Structured session summary exceeds the configured token limit")
+            available = self.max_summary_tokens - structured_tokens
+            if summary.summary and available > 0:
+                available = max(0, available - estimate_tokens("Summary: "))
             summary = summary.model_copy(
-                update={
-                    "summary": truncate_to_tokens(rendered, content_tokens),
-                    "goal": None,
-                    "decisions": [],
-                    "open_questions": [],
-                    "active_projects": [],
-                }
+                update={"summary": truncate_to_tokens(summary.summary, available)}
             )
+            while summary.summary and estimate_tokens(summary.render()) > self.max_summary_tokens:
+                reduced = max(0, estimate_tokens(summary.summary) - 1)
+                summary = summary.model_copy(
+                    update={"summary": truncate_to_tokens(summary.summary, reduced)}
+                )
+            if estimate_tokens(summary.render()) > self.max_summary_tokens:
+                raise ValueError("Session summary exceeds the configured token limit")
         now = utc_now()
         stored = summary.model_copy(
             update={

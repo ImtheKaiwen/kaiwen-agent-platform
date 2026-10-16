@@ -22,6 +22,11 @@ class SessionSummary(BaseModel):
     decisions: list[str] = Field(default_factory=list)
     open_questions: list[str] = Field(default_factory=list)
     active_projects: list[str] = Field(default_factory=list)
+    completed: list[str] = Field(default_factory=list)
+    next_steps: list[str] = Field(default_factory=list)
+    known_constraints: list[str] = Field(default_factory=list)
+    artifact_refs: list[str] = Field(default_factory=list)
+    source_message_ids: list[str] = Field(default_factory=list)
     source_message_id: str | None = None
     created_at: datetime = Field(default_factory=utc_now)
     updated_at: datetime = Field(default_factory=utc_now)
@@ -42,6 +47,10 @@ class SessionSummary(BaseModel):
             or self.decisions
             or self.open_questions
             or self.active_projects
+            or self.completed
+            or self.next_steps
+            or self.known_constraints
+            or self.artifact_refs
         ):
             raise ValueError("Session summary must contain at least one value")
         return self
@@ -58,6 +67,14 @@ class SessionSummary(BaseModel):
             sections.append("Open questions: " + "; ".join(self.open_questions))
         if self.active_projects:
             sections.append("Active projects: " + "; ".join(self.active_projects))
+        if self.completed:
+            sections.append("Completed: " + "; ".join(self.completed))
+        if self.next_steps:
+            sections.append("Next steps: " + "; ".join(self.next_steps))
+        if self.known_constraints:
+            sections.append("Known constraints: " + "; ".join(self.known_constraints))
+        if self.artifact_refs:
+            sections.append("Artifact references: " + "; ".join(self.artifact_refs))
         return "\n".join(sections)
 
 

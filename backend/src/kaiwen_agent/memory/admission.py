@@ -37,7 +37,10 @@ class SecretDetector:
         if self._contains_secret_key(candidate.structured_data):
             return True
         serialized = f"{candidate.content}\n{candidate.structured_data}"
-        return any(pattern.search(serialized) for pattern in self._patterns)
+        return self.contains_secret_text(serialized)
+
+    def contains_secret_text(self, text: str) -> bool:
+        return any(pattern.search(text) for pattern in self._patterns)
 
     def _contains_secret_key(self, value: object) -> bool:
         if isinstance(value, dict):

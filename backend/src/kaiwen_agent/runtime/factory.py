@@ -10,6 +10,12 @@ from kaiwen_agent.agents import (
     VersionedReference,
 )
 from kaiwen_agent.capabilities import CapabilityManifest, CapabilityRegistry
+from kaiwen_agent.context_engine import (
+    ContextBudget,
+    ContextBuilder,
+    ContextCompactionManager,
+    ContextWindow,
+)
 from kaiwen_agent.events import EventSink
 from kaiwen_agent.exceptions import ToolNotFoundError
 from kaiwen_agent.models import ProviderRegistry
@@ -20,6 +26,7 @@ from kaiwen_agent.sessions import RunStore
 from kaiwen_agent.tools.definition import ToolDefinition
 from kaiwen_agent.tools.execution import ToolExecutor
 from kaiwen_agent.tools.registry import ToolRegistry
+from kaiwen_agent.tools.results import ToolResultProcessor
 
 
 class RuntimeCompositionError(ValueError):
@@ -50,6 +57,11 @@ class AgentFactory:
         event_sink: EventSink | None = None,
         run_store: RunStore | None = None,
         tool_executor: ToolExecutor | None = None,
+        tool_result_processor: ToolResultProcessor | None = None,
+        context_builder: ContextBuilder | None = None,
+        context_budget: ContextBudget | None = None,
+        context_window: ContextWindow | None = None,
+        compaction_manager: ContextCompactionManager | None = None,
         services: Mapping[str, Any] | None = None,
     ) -> None:
         self.agents = agents
@@ -60,6 +72,11 @@ class AgentFactory:
         self.event_sink = event_sink
         self.run_store = run_store
         self.tool_executor = tool_executor
+        self.tool_result_processor = tool_result_processor
+        self.context_builder = context_builder
+        self.context_budget = context_budget
+        self.context_window = context_window
+        self.compaction_manager = compaction_manager
         self.services = dict(services or {})
 
     def create(
@@ -84,6 +101,7 @@ class AgentFactory:
             raise RuntimeCompositionError(str(error)) from error
 
         pins = self._pins(profile, definition, prompt, manifest, selected_tools)
+        context_window = self._context_window_with_prompt(prompt)
         runtime = AgentRuntime(
             name=definition.id,
             model=model,
@@ -92,7 +110,12 @@ class AgentFactory:
             event_sink=self.event_sink,
             run_store=self.run_store,
             tool_executor=self.tool_executor,
+            tool_result_processor=self.tool_result_processor,
             services=self.services,
+            context_builder=self.context_builder,
+            context_budget=self.context_budget,
+            context_window=context_window,
+            compaction_manager=self.compaction_manager,
             default_autonomy=profile.default_autonomy,
             max_steps=definition.max_steps,
             metadata={
@@ -108,6 +131,19 @@ class AgentFactory:
             prompt=prompt,
             capability_manifest=manifest,
             pins=pins,
+        )
+
+    def _context_window_with_prompt(self, prompt: PromptDefinition) -> ContextWindow | None:
+        if self.context_window is None or self.context_builder is None:
+            return self.context_window
+        prompt_tokens = self.context_builder.allocator.token_counter.count(prompt.template)
+        return ContextWindow.model_validate(
+            {
+                **self.context_window.model_dump(),
+                "reserved_request_tokens": (
+                    self.context_window.reserved_request_tokens + prompt_tokens
+                ),
+            }
         )
 
     @staticmethod

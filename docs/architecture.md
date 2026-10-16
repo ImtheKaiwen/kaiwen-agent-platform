@@ -93,6 +93,12 @@ while skill compilation targets the existing Task Runtime rather than introducin
 second executor. Artifacts are owner-scoped references for large outputs, and
 capability manifests are inspectable declarations rather than authorization grants.
 
+Runtime context composition remains an optional facade concern. Injected token
+counters bound source allocation and complete request capacity; structured compaction
+summarizes only canonical conversation records and cannot become an authority source.
+Large tool results are replaced in model context with owner-scoped artifact references
+through an executor decorator, without changing the established `Agent` loop.
+
 ## Evaluation and production controls
 
 Evaluation targets are injected and suites remain declarative. Replay consumes

@@ -17,6 +17,8 @@
   deny-by-default tool exposure.
 - Add immutable agent definitions and workspace profiles, a provider factory registry,
   fail-fast composition validation, and exact runtime configuration pins.
+- Add optional bounded runtime context composition, provider-aware token counters,
+  provenance-checked rolling compaction, and owner-scoped tool-output offloading.
 
 ## 0.4.0a1 — 2026-09-24
 

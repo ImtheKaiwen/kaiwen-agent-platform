@@ -8,10 +8,13 @@ from kaiwen_agent.context_engine.models import (
     ContextItem,
     ContextKind,
 )
-from kaiwen_agent.tokens import estimate_tokens, truncate_to_tokens
+from kaiwen_agent.context_engine.token_counter import EstimatedTokenCounter, TokenCounter
 
 
 class ContextBudgetAllocator:
+    def __init__(self, token_counter: TokenCounter | None = None) -> None:
+        self.token_counter = token_counter or EstimatedTokenCounter()
+
     def allocate(self, items: list[ContextItem], budget: ContextBudget) -> BuiltContext:
         ordered = sorted(
             items,
@@ -33,11 +36,11 @@ class ContextBudgetAllocator:
             if available <= 0:
                 truncated = True
                 continue
-            token_count = estimate_tokens(item.content)
+            token_count = self.token_counter.count(item.content)
             content = item.content
             if token_count > available:
-                content = truncate_to_tokens(content, available)
-                token_count = estimate_tokens(content) if content else 0
+                content = self.token_counter.truncate(content, available)
+                token_count = self.token_counter.count(content) if content else 0
                 truncated = True
             if not content:
                 continue

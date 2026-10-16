@@ -4,7 +4,7 @@ from enum import StrEnum
 from typing import Any
 from uuid import uuid4
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class ContextKind(StrEnum):
@@ -67,6 +67,24 @@ class ContextBudget(BaseModel):
 
     def limit_for(self, kind: ContextKind) -> int:
         return int(getattr(self, kind.value))
+
+
+class ContextWindow(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    max_context_tokens: int = Field(ge=2)
+    reserved_output_tokens: int = Field(default=0, ge=0)
+    reserved_request_tokens: int = Field(default=0, ge=0)
+
+    @model_validator(mode="after")
+    def require_input_capacity(self) -> ContextWindow:
+        if self.reserved_output_tokens + self.reserved_request_tokens >= self.max_context_tokens:
+            raise ValueError("Context window reservations leave no input capacity")
+        return self
+
+    @property
+    def available_input_tokens(self) -> int:
+        return self.max_context_tokens - self.reserved_output_tokens - self.reserved_request_tokens
 
 
 class BuiltContext(BaseModel):

@@ -78,6 +78,13 @@ offload large outputs through artifacts, and add conservative structured compact
 Canonical instructions, policy, task state, and acceptance criteria are never sourced
 from a lossy summary.
 
+Implemented: runtime context composition is optional and bounded by provider-aware
+token counting, output/request reservations, and selected tool-schema cost. Rolling
+compaction has structured provenance and preservation checks, keeps raw history, and
+rejects unsafe summaries. Large model-facing tool results can be offloaded to
+owner-scoped artifacts. The legacy `Agent` and `ModelProvider.respond()` signatures
+remain unchanged.
+
 ### U4 — Standards and runtime quality
 
 Add versioned standards, deterministic requirement resolution, verifier registration,
