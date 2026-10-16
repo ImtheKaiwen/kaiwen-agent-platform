@@ -30,6 +30,10 @@ truth for sequencing and completion status, not this file.
   artifacts, and responsive presentation.
 - Text and voice should converge on the same durable conversation and task systems.
   Avoid parallel chat, voice, admin, or telephony agent implementations.
+- The planned `AgentRuntime` is a compatibility-preserving composition facade over
+  the existing `Agent` and runtime services. Simple chat must remain independent of
+  task, quality, and team machinery; full side-effecting autonomy follows durable
+  action-intent and recovery support, not before it.
 
 ## Working assumptions to preserve
 
@@ -39,6 +43,9 @@ truth for sequencing and completion status, not this file.
   production deployment choice.
 - “Implemented” does not authorize publishing, pushing, or deploying. Those are
   explicit release actions and package versions are immutable once published.
+- Standards describe evidence-backed delivery requirements; they do not grant
+  permissions and must remain separate from prompts, policies, skills, and offline
+  evaluation.
 - Short-term session summaries remain distinct from durable memory. Long-term
   candidate admission, policy-gated recall, and the optional PostgreSQL/pgvector
   adapter now exist, while model-driven extraction, consolidation/decay workers,

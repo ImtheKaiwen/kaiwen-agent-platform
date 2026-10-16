@@ -43,6 +43,8 @@ then run:
 ```
 
 Current implementation status is tracked in [`docs/roadmap.md`](docs/roadmap.md).
+The dependency-ordered, single-agent-first composition roadmap is documented in
+[`docs/unified-runtime.md`](docs/unified-runtime.md).
 Persistence and event delivery are documented in
 [`docs/persistence.md`](docs/persistence.md).
 Bounded context, short-term summaries, and policy-gated long-term memory are

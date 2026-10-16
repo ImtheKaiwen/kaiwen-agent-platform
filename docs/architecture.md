@@ -12,6 +12,12 @@ Browser application
   -> versioned @imthekaiwen/agent-protocol events
 ```
 
+The next composition layer is governed by ADRs 0005-0007. `AgentRuntime` is a
+single-agent-first facade, not another model loop or scheduler. Standards and runtime
+quality remain distinct from prompts, policy, skills, and offline evaluation.
+Durable workflows resume from explicit safe boundaries with at-least-once semantics.
+See [`unified-runtime.md`](unified-runtime.md) for the dependency-ordered rollout.
+
 The backend is the decision authority. Browser actions are semantic, allowlisted,
 validated, and report a structured result. Arbitrary JavaScript or DOM selectors are
 not part of the protocol.

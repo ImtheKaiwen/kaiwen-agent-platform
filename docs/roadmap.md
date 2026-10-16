@@ -92,6 +92,17 @@ implementation status for the reusable packages.
 
 ## Next
 
+- [x] Phase U0: freeze legacy public entry points and accept the single-agent-first,
+      standards-separation, and safe-boundary recovery architecture decisions.
+- [ ] Phase U1: minimal `AgentRuntime` composition with explicit mode/autonomy,
+      trusted identity, chat fast path, and bounded synchronous action path.
+- [ ] Phase U2-U3: immutable agent/workspace definitions, provider composition,
+      version pins, context integration, model-aware token accounting, and compaction.
+- [ ] Phase U4-U6: standards and evidence gates, durable runtime state/recovery, then
+      bounded autonomous single-agent workflows compiled to the existing Task Runtime.
+- [ ] Phase U7-U10: optional teams, Gemini/Ollama capabilities and adapters, speech
+      ports, security/load hardening, examples, and developer documentation.
+
 - [ ] Phase R4 / G: authenticated portfolio admin integration, WebRTC bootstrap route,
       Dynamic Island voice states, task notifications, and semantic UI dispatch.
 - [ ] Phase R5A.2: policy-controlled lifecycle actions, reasoning integration, and
