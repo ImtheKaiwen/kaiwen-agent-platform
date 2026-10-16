@@ -45,6 +45,8 @@
   transient-error classification, and strict provider continuation affinity.
 - Add CI-verified, credential-free autonomous workflow and least-privilege team
   quickstarts.
+- Add a concurrent multitenant regression for exact event visibility, action-intent
+  identity, and restart-safe receipt replay under deliberately colliding client IDs.
 
 ## 0.4.0a1 — 2026-09-24
 

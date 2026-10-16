@@ -125,7 +125,8 @@ implementation status for the reusable packages.
       built-in persistence/stream defense in depth, and an MCP prompt-injection
       regression proving that untrusted output cannot expand the registered toolset,
       concurrent-run provider continuation isolation, and exact owner-scoped event
-      reads with fail-closed legacy migration.
+      reads with fail-closed legacy migration. A concurrent SQLite matrix also proves
+      same-ID tenant/user isolation across events, action intents, and durable replays.
 - [ ] Phase U10 hardening: bounded initial-call provider failover now preserves
       locality and provider-state affinity; optional document and specialized adapters,
       the remaining crash/multitenant/load matrices, and expanded developer
