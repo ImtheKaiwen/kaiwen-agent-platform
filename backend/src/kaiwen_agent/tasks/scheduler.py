@@ -66,9 +66,7 @@ class TaskScheduler:
                 for completed in done:
                     await completed
                 self._active = {
-                    task_id: future
-                    for task_id, future in self._active.items()
-                    if not future.done()
+                    task_id: future for task_id, future in self._active.items() if not future.done()
                 }
                 continue
 
@@ -90,9 +88,7 @@ class TaskScheduler:
         if task.terminal:
             return
         if task.status in {TaskStatus.RUNNING, TaskStatus.PAUSED}:
-            await self.control.send(
-                task_id, ControlMessage(type="cancel", created_by=created_by)
-            )
+            await self.control.send(task_id, ControlMessage(type="cancel", created_by=created_by))
             return
         transition_task(task, TaskStatus.CANCELLED)
         await self.store.save_task(task)
@@ -147,9 +143,7 @@ class TaskScheduler:
             if not await self.resources.try_acquire(task.resource_keys, task.id):
                 transition_task(task, TaskStatus.WAITING_RESOURCE)
                 await self.store.save_task(task)
-                await self._emit(
-                    task, "resource.waiting", {"resource_keys": task.resource_keys}
-                )
+                await self._emit(task, "resource.waiting", {"resource_keys": task.resource_keys})
                 continue
 
             self._not_before.pop(task.id, None)
@@ -157,9 +151,7 @@ class TaskScheduler:
             await self.store.save_task(task)
             await self._emit(task, "task.queued", {})
             if task.resource_keys:
-                await self._emit(
-                    task, "resource.acquired", {"resource_keys": task.resource_keys}
-                )
+                await self._emit(task, "resource.acquired", {"resource_keys": task.resource_keys})
             self._agent_usage[task.agent_id] += 1
             self._active[task.id] = asyncio.create_task(self._execute_task(task))
             scheduled = True
@@ -175,9 +167,7 @@ class TaskScheduler:
             context = TaskExecutionContext(
                 task_id=task.id,
                 control=self.control,
-                progress_callback=lambda progress, details: self._progress(
-                    task, progress, details
-                ),
+                progress_callback=lambda progress, details: self._progress(task, progress, details),
             )
             execution = worker.execute(task, context)
             if task.timeout_seconds is None:
@@ -205,14 +195,10 @@ class TaskScheduler:
         finally:
             await self.resources.release(task.id)
             if task.resource_keys:
-                await self._emit(
-                    task, "resource.released", {"resource_keys": task.resource_keys}
-                )
+                await self._emit(task, "resource.released", {"resource_keys": task.resource_keys})
             self._agent_usage[task.agent_id] -= 1
 
-    async def _handle_failure(
-        self, task: AgentTask, error: BaseException, error_code: str
-    ) -> None:
+    async def _handle_failure(self, task: AgentTask, error: BaseException, error_code: str) -> None:
         task.error = str(error)
         task.error_code = error_code
         transition_task(task, TaskStatus.FAILED)
@@ -235,9 +221,7 @@ class TaskScheduler:
             {"attempts": task.attempts, "error_code": error_code},
         )
 
-    async def _progress(
-        self, task: AgentTask, progress: float, details: dict[str, Any]
-    ) -> None:
+    async def _progress(self, task: AgentTask, progress: float, details: dict[str, Any]) -> None:
         task.progress = progress
         await self.store.save_task(task)
         await self._emit(task, "task.progress", {"progress": progress, **details})

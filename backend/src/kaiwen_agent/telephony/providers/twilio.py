@@ -130,9 +130,9 @@ class TwilioSIPOutboundService:
                     "StatusCallbackEvent": "initiated ringing answered completed",
                 }
             )
-        credentials = base64.b64encode(
-            f"{self._account_sid}:{self._auth_token}".encode()
-        ).decode("ascii")
+        credentials = base64.b64encode(f"{self._account_sid}:{self._auth_token}".encode()).decode(
+            "ascii"
+        )
         payload = await self._transport.post_form(
             f"{self._base_url}/Accounts/{self._account_sid}/Calls.json",
             headers={"Authorization": f"Basic {credentials}"},

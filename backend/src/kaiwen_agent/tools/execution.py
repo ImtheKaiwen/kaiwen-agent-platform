@@ -17,6 +17,13 @@ from kaiwen_agent.exceptions import (
     ToolTimeoutError,
     ToolValidationError,
 )
+from kaiwen_agent.policy import (
+    PolicyContext,
+    PolicyDecisionType,
+    PolicyEngine,
+    ToolApprovalPolicy,
+    ToolPermissionPolicy,
+)
 from kaiwen_agent.tools.approval import ApprovalGate, ApprovalRequest
 from kaiwen_agent.tools.definition import ToolDefinition
 from kaiwen_agent.tools.idempotency import IdempotencyStore, InMemoryIdempotencyStore
@@ -37,12 +44,14 @@ class ToolExecutor:
         idempotency_store: IdempotencyStore | None = None,
         audit_store: AuditStore | None = None,
         redactor: SecretRedactor | None = None,
+        policy_engine: PolicyEngine | None = None,
     ) -> None:
         self.approval_gate = approval_gate
         self.idempotency_store = idempotency_store or InMemoryIdempotencyStore()
         self.audit_store = (
             RedactingAuditStore(audit_store, redactor) if audit_store is not None else None
         )
+        self.policy_engine = policy_engine or PolicyEngine(audit_store=audit_store)
 
     async def execute(
         self,
@@ -65,19 +74,66 @@ class ToolExecutor:
             )
             raise ToolValidationError(f"Invalid arguments for {definition.name}") from error
 
-        missing = definition.permissions - context.permissions
-        if missing:
-            required = ", ".join(sorted(missing))
+        policy_context = PolicyContext(
+            tenant_id=context.tenant_id,
+            user_id=context.user_id,
+            agent_id=context.agent_id or "unknown-agent",
+            session_id=context.session_id,
+            conversation_id=context.conversation_id,
+            run_id=execution_scope,
+            trace_id=context.trace_id or "trace_unavailable",
+            environment=context.environment,
+            action=f"tool.execute:{definition.name}",
+            resource=definition.name,
+            capabilities=context.permissions,
+            metadata={
+                "tool_name": definition.name,
+                "side_effect": definition.side_effect,
+                "requires_approval": definition.requires_approval,
+            },
+        )
+        decision = await self.policy_engine.evaluate(
+            policy_context,
+            extra_policies=(
+                ToolPermissionPolicy(definition.permissions),
+                ToolApprovalPolicy(
+                    required=definition.requires_approval,
+                    approval_scope=f"tool:{definition.name}",
+                ),
+            ),
+            emit=emit,
+        )
+        if decision.decision == PolicyDecisionType.DENY:
             await self._audit(
                 context,
                 definition,
                 call,
                 "denied",
-                {"missing_permissions": sorted(missing)},
+                {
+                    "reason": decision.reason,
+                    "policy_id": decision.policy_id,
+                    "rule_id": decision.rule_id,
+                },
             )
-            raise PermissionDeniedError(f"Tool {definition.name} requires: {required}")
+            raise PermissionDeniedError(f"Policy denied tool {definition.name}: {decision.reason}")
 
-        if definition.requires_approval:
+        if decision.modifications is not None:
+            unknown = set(decision.modifications) - {"arguments"}
+            modified_arguments = decision.modifications.get("arguments")
+            if unknown or not isinstance(modified_arguments, dict):
+                raise ToolValidationError(f"Unsupported policy modifications for {definition.name}")
+            call = call.model_copy(update={"arguments": {**call.arguments, **modified_arguments}})
+            try:
+                arguments = definition.input_model.model_validate(call.arguments)
+            except ValidationError as error:
+                raise ToolValidationError(
+                    f"Policy produced invalid arguments for {definition.name}"
+                ) from error
+
+        if decision.decision in {
+            PolicyDecisionType.REQUIRE_APPROVAL,
+            PolicyDecisionType.REVIEW,
+        }:
             request = ApprovalRequest(
                 tool_name=definition.name,
                 call_id=call.id,
@@ -108,9 +164,7 @@ class ToolExecutor:
             idempotency_key = f"{definition.name}:{idempotency_key}"
             cached = await self.idempotency_store.get(idempotency_key)
             if cached is not None:
-                await self._audit(
-                    context, definition, call, "succeeded", {"cached": True}
-                )
+                await self._audit(context, definition, call, "succeeded", {"cached": True})
                 await emit(
                     "tool.completed",
                     {"tool": definition.name, "call_id": call.id, "cached": True},

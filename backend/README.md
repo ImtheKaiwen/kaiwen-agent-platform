@@ -86,6 +86,22 @@ runtime never stores it and it must never be exposed to browser code.
   text-and-voice conversations, and allowlisted background task delegation.
 - Trusted OpenAI Live sideband execution through the same permission, approval,
   idempotency, and audit pipeline used by text agents.
+- Deterministic lifecycle and central policy runtimes, bounded context assembly,
+  short-term session summaries, and policy-gated long-term memory.
+- Non-blocking background jobs projected onto the existing Task Runtime, including
+  progress events, cooperative cancellation, parent-child progress, and recovery.
+- A deterministic Trigger Router that filters, deduplicates, debounces, and
+  coalesces untrusted events before scheduling lifecycle wakeups.
+- Policy-gated model routing, hierarchical runtime budgets, immutable versioned
+  prompt and declarative skill registries, owner-scoped artifacts, and inspectable
+  capability manifests.
+- Structured evaluation, observation-only replay, fail-closed simulation,
+  tenant-scoped redacted dead letters, backpressure, optional Redis coordination
+  leases with fencing tokens, fixed-catalog tenant-scoped metrics, heartbeat health,
+  and an allowlisted server-side secret-provider boundary.
+- Optional PostgreSQL full-text + pgvector hybrid memory retrieval via
+  `kaiwen-agent[postgres-memory]`.
+- Optional Redis distributed lease coordination via `kaiwen-agent[redis]`.
 
 Realtime usage and integration boundaries are documented in the repository's
 `docs/realtime.md`, `docs/openai-live.md`, and `docs/conversation-bridge.md` files.
@@ -95,7 +111,8 @@ Realtime usage and integration boundaries are documented in the repository's
 Tools marked `reversible` or `destructive` receive a runtime idempotency key.
 Set `requires_approval=True` and supply an application-owned `ApprovalGate` for
 publishing, deleting, deploying, calling, or sending messages. Applications
-must still perform authorization inside their own service boundary.
+must still perform authorization inside their own service boundary. Memory setup and
+its trust boundaries are documented in `docs/long-term-memory.md`.
 
 ## Coding-agent handoff
 

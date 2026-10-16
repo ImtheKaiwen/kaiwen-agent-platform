@@ -25,9 +25,5 @@ class InMemoryTaskStore:
         return task.model_copy(deep=True) if task else None
 
     async def list_tasks(self, *, status: TaskStatus | None = None) -> list[AgentTask]:
-        tasks = [
-            task
-            for task in self._tasks.values()
-            if status is None or task.status == status
-        ]
+        tasks = [task for task in self._tasks.values() if status is None or task.status == status]
         return [task.model_copy(deep=True) for task in tasks]

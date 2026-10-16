@@ -39,6 +39,8 @@ truth for sequencing and completion status, not this file.
   production deployment choice.
 - “Implemented” does not authorize publishing, pushing, or deploying. Those are
   explicit release actions and package versions are immutable once published.
-- Memory, production scaling, telephony, and scheduled calls are deliberate later
-  phases. Follow `docs/roadmap.md`; do not fill gaps with undocumented provider
-  behavior or pre-emptively place product policy in reusable packages.
+- Short-term session summaries remain distinct from durable memory. Long-term
+  candidate admission, policy-gated recall, and the optional PostgreSQL/pgvector
+  adapter now exist, while model-driven extraction, consolidation/decay workers,
+  shared-project ACL composition, production scaling, and scheduled calls remain
+  later phases. Follow `docs/roadmap.md`; product policy stays in consuming apps.

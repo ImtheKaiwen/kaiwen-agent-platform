@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Any, Literal, Protocol
 from uuid import uuid4
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, SecretStr
 
 from kaiwen_agent.types import utc_now
 
@@ -53,6 +53,8 @@ class SecretRedactor:
 
     def redact(self, value: Any, *, key: str | None = None) -> Any:
         if key is not None and self._secret_keys.search(key):
+            return "[REDACTED]"
+        if isinstance(value, SecretStr):
             return "[REDACTED]"
         if isinstance(value, dict):
             return {

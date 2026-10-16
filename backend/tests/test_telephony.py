@@ -212,9 +212,7 @@ def test_twilio_outbound_call_bridges_pstn_to_sip_without_exposing_credentials()
             account_sid="AC123456789",
             auth_token="twilio-secret",
             from_number="+12025550123",
-            sip_target_uri=(
-                "sip:project_123@sip.api.openai.com;transport=tls;secure=true"
-            ),
+            sip_target_uri=("sip:project_123@sip.api.openai.com;transport=tls;secure=true"),
             transport=transport,
         )
         receipt = await service.place_call(
@@ -233,9 +231,7 @@ def test_twilio_outbound_call_bridges_pstn_to_sip_without_exposing_credentials()
         assert request["form"]["To"] == "+905551112233"
         assert "transport=tls;secure=true" in request["form"]["Twiml"]
         assert "x-kaiwen-binding=opaque-token" in request["form"]["Twiml"]
-        assert request["form"]["StatusCallbackEvent"] == (
-            "initiated ringing answered completed"
-        )
+        assert request["form"]["StatusCallbackEvent"] == ("initiated ringing answered completed")
 
     asyncio.run(scenario())
 

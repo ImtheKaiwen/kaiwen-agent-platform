@@ -122,13 +122,9 @@ def test_run_control_continues_durable_checkpoint_sequence(tmp_path) -> None:
 
     async def scenario() -> None:
         first_store = SQLitePersistence(database)
-        await RunControl(checkpoints=first_store).checkpoint(
-            "task_1", state={"step": 1}
-        )
+        await RunControl(checkpoints=first_store).checkpoint("task_1", state={"step": 1})
         restarted_store = SQLitePersistence(database)
-        await RunControl(checkpoints=restarted_store).checkpoint(
-            "task_1", state={"step": 2}
-        )
+        await RunControl(checkpoints=restarted_store).checkpoint("task_1", state={"step": 2})
         latest = await restarted_store.latest_checkpoint("task_1")
         assert latest is not None
         assert latest.sequence == 2
@@ -157,12 +153,10 @@ def test_conversation_messages_are_durable_and_tenant_scoped(tmp_path) -> None:
 
     async def read() -> None:
         store = SQLitePersistence(database)
-        messages = await store.list_messages(
-            tenant_id="tenant_1", conversation_id="conversation_1"
-        )
+        messages = await store.list_messages(tenant_id="tenant_1", conversation_id="conversation_1")
         assert [message.id for message in messages] == [message_id]
-        assert await store.list_messages(
-            tenant_id="tenant_2", conversation_id="conversation_1"
-        ) == []
+        assert (
+            await store.list_messages(tenant_id="tenant_2", conversation_id="conversation_1") == []
+        )
 
     asyncio.run(read())

@@ -41,10 +41,16 @@ class Agent:
         trace_id = context.trace_id or f"trace_{uuid4().hex}"
         effective_context = AgentContext(
             session_id=context.session_id,
+            tenant_id=context.tenant_id,
+            user_id=context.user_id,
+            agent_id=self.name,
+            conversation_id=context.conversation_id,
+            client_id=context.client_id,
             trace_id=trace_id,
+            environment=context.environment,
             permissions=context.permissions & self.permissions,
             services=context.services,
-            metadata=context.metadata,
+            metadata={**context.metadata, "configured_agent_id": self.name},
         )
         run = AgentRun(session_id=context.session_id, status="running")
         await self.run_store.save(run)

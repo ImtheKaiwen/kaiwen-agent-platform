@@ -86,9 +86,7 @@ def live_config() -> RealtimeSessionConfig:
 
 def test_openai_live_primary_websocket_lifecycle() -> None:
     async def scenario() -> None:
-        socket = FakeLiveSocket(
-            [{"type": "session.started", "session": {"id": "live_123"}}]
-        )
+        socket = FakeLiveSocket([{"type": "session.started", "session": {"id": "live_123"}}])
         connector = FakeLiveConnector(socket)
         provider = OpenAILiveProvider(
             api_key="server-secret",
@@ -214,9 +212,7 @@ def test_sideband_attaches_without_restarting_or_closing_primary_session() -> No
             connector=connector,
         )
         connection = await service.attach(active_live_session())
-        assert connector.url == (
-            "wss://api.openai.com/v1/live/sessions/live_browser_1/attach"
-        )
+        assert connector.url == ("wss://api.openai.com/v1/live/sessions/live_browser_1/attach")
         assert connector.headers == {"Authorization": "Bearer server-secret"}
         assert socket.sent == []
         await connection.close()
@@ -381,9 +377,7 @@ def test_sideband_tool_bridge_rejects_cross_user_context() -> None:
 
 def test_text_requires_responses_delegation() -> None:
     async def scenario() -> None:
-        socket = FakeLiveSocket(
-            [{"type": "session.started", "session": {"id": "live_123"}}]
-        )
+        socket = FakeLiveSocket([{"type": "session.started", "session": {"id": "live_123"}}])
         connection = await OpenAILiveProvider(
             api_key="secret",
             connector=FakeLiveConnector(socket),

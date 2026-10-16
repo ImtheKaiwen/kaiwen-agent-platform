@@ -21,6 +21,17 @@ export const AGENT_EVENT_TYPES = [
   "task.completed",
   "task.failed",
   "task.cancelled",
+  "job.created",
+  "job.queued",
+  "job.assigned",
+  "job.started",
+  "job.progress",
+  "job.waiting",
+  "job.waiting_approval",
+  "job.completed",
+  "job.failed",
+  "job.cancel_requested",
+  "job.cancelled",
   "resource.waiting",
   "resource.acquired",
   "resource.released",
@@ -33,6 +44,32 @@ export const AGENT_EVENT_TYPES = [
   "client_action.requested",
   "client_action.result",
   "client_action.failed",
+  "lifecycle.wakeup.scheduled",
+  "lifecycle.wakeup.cancelled",
+  "lifecycle.cycle.started",
+  "lifecycle.cycle.observing",
+  "lifecycle.cycle.thinking",
+  "lifecycle.cycle.acting",
+  "lifecycle.cycle.persisting",
+  "lifecycle.cycle.scheduling",
+  "lifecycle.cycle.sleeping",
+  "lifecycle.cycle.completed",
+  "lifecycle.cycle.failed",
+  "policy.allowed",
+  "policy.denied",
+  "policy.approval_required",
+  "policy.review_required",
+  "policy.modified",
+  "trigger.event.accepted",
+  "trigger.event.deduplicated",
+  "trigger.wakeup.scheduled",
+  "objective.created",
+  "objective.status.changed",
+  "watch.created",
+  "watch.matched",
+  "watch.expired",
+  "watch.cancelled",
+  "attention.created",
 ] as const;
 
 export type AgentEventType =
@@ -56,6 +93,17 @@ export type AgentEventType =
   | "task.completed"
   | "task.failed"
   | "task.cancelled"
+  | "job.created"
+  | "job.queued"
+  | "job.assigned"
+  | "job.started"
+  | "job.progress"
+  | "job.waiting"
+  | "job.waiting_approval"
+  | "job.completed"
+  | "job.failed"
+  | "job.cancel_requested"
+  | "job.cancelled"
   | "resource.waiting"
   | "resource.acquired"
   | "resource.released"
@@ -67,7 +115,33 @@ export type AgentEventType =
   | "client.state"
   | "client_action.requested"
   | "client_action.result"
-  | "client_action.failed";
+  | "client_action.failed"
+  | "lifecycle.wakeup.scheduled"
+  | "lifecycle.wakeup.cancelled"
+  | "lifecycle.cycle.started"
+  | "lifecycle.cycle.observing"
+  | "lifecycle.cycle.thinking"
+  | "lifecycle.cycle.acting"
+  | "lifecycle.cycle.persisting"
+  | "lifecycle.cycle.scheduling"
+  | "lifecycle.cycle.sleeping"
+  | "lifecycle.cycle.completed"
+  | "lifecycle.cycle.failed"
+  | "policy.allowed"
+  | "policy.denied"
+  | "policy.approval_required"
+  | "policy.review_required"
+  | "policy.modified"
+  | "trigger.event.accepted"
+  | "trigger.event.deduplicated"
+  | "trigger.wakeup.scheduled"
+  | "objective.created"
+  | "objective.status.changed"
+  | "watch.created"
+  | "watch.matched"
+  | "watch.expired"
+  | "watch.cancelled"
+  | "attention.created";
 
 export interface AgentEvent<TPayload extends Record<string, unknown> = Record<string, unknown>> {
   schema_version: typeof SCHEMA_VERSION;

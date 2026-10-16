@@ -15,4 +15,3 @@ def test_registry_denies_unknown_tools() -> None:
 def test_registry_rejects_duplicate_names() -> None:
     with pytest.raises(DuplicateToolError):
         ToolRegistry([create_greeting, create_greeting])
-

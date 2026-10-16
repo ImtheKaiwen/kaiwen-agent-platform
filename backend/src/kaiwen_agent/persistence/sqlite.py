@@ -4,12 +4,21 @@ import asyncio
 import json
 import sqlite3
 from collections.abc import Callable
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import TypeVar
 
 from kaiwen_agent.audit import AuditRecord
 from kaiwen_agent.control.checkpoints import TaskCheckpoint
 from kaiwen_agent.events import AgentEvent
+from kaiwen_agent.jobs.models import TERMINAL_JOB_STATUSES, AgentJob, JobStatus
+from kaiwen_agent.lifecycle.models import (
+    LifecycleCycle,
+    LifecycleRuntimeRecord,
+    LifecycleWakeup,
+    WakeupStatus,
+)
+from kaiwen_agent.memory.models import SessionSummary
 from kaiwen_agent.realtime.conversation import ConversationMessage
 from kaiwen_agent.sessions import SessionRecord
 from kaiwen_agent.tasks.models import AgentTask, TaskStatus
@@ -284,10 +293,7 @@ class SQLitePersistence:
                 ORDER BY sequence ASC LIMIT ?""",
                 (tenant_id, conversation_id, after_sequence, limit),
             ).fetchall()
-            return [
-                ConversationMessage.model_validate_json(row["message_json"])
-                for row in rows
-            ]
+            return [ConversationMessage.model_validate_json(row["message_json"]) for row in rows]
 
         return await self._run(operation)
 
@@ -367,6 +373,606 @@ class SQLitePersistence:
 
         return await self._run(operation)
 
+    async def save_runtime(self, runtime: LifecycleRuntimeRecord) -> None:
+        await self.initialize()
+
+        def operation(connection: sqlite3.Connection) -> None:
+            connection.execute(
+                """INSERT INTO lifecycle_runtime (agent_id, runtime_json, updated_at)
+                VALUES (?, ?, ?)
+                ON CONFLICT(agent_id) DO UPDATE SET
+                    runtime_json = excluded.runtime_json,
+                    updated_at = excluded.updated_at""",
+                (
+                    runtime.agent_id,
+                    runtime.model_dump_json(),
+                    runtime.updated_at.isoformat(),
+                ),
+            )
+
+        await self._run(operation)
+
+    async def get_runtime(self, agent_id: str) -> LifecycleRuntimeRecord | None:
+        await self.initialize()
+
+        def operation(connection: sqlite3.Connection) -> LifecycleRuntimeRecord | None:
+            row = connection.execute(
+                "SELECT runtime_json FROM lifecycle_runtime WHERE agent_id = ?",
+                (agent_id,),
+            ).fetchone()
+            return LifecycleRuntimeRecord.model_validate_json(row["runtime_json"]) if row else None
+
+        return await self._run(operation)
+
+    async def save_cycle(self, cycle: LifecycleCycle) -> None:
+        await self.initialize()
+
+        def operation(connection: sqlite3.Connection) -> None:
+            connection.execute(
+                """INSERT INTO lifecycle_cycles
+                    (id, agent_id, status, woke_at, cycle_json)
+                VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT(id) DO UPDATE SET
+                    status = excluded.status,
+                    cycle_json = excluded.cycle_json""",
+                (
+                    cycle.id,
+                    cycle.agent_id,
+                    cycle.status,
+                    cycle.woke_at.isoformat(),
+                    cycle.model_dump_json(),
+                ),
+            )
+
+        await self._run(operation)
+
+    async def get_cycle(self, cycle_id: str) -> LifecycleCycle | None:
+        await self.initialize()
+
+        def operation(connection: sqlite3.Connection) -> LifecycleCycle | None:
+            row = connection.execute(
+                "SELECT cycle_json FROM lifecycle_cycles WHERE id = ?", (cycle_id,)
+            ).fetchone()
+            return LifecycleCycle.model_validate_json(row["cycle_json"]) if row else None
+
+        return await self._run(operation)
+
+    async def list_cycles(self, *, agent_id: str, limit: int = 100) -> list[LifecycleCycle]:
+        self._validate_lifecycle_limit(limit)
+        await self.initialize()
+
+        def operation(connection: sqlite3.Connection) -> list[LifecycleCycle]:
+            rows = connection.execute(
+                """SELECT cycle_json FROM lifecycle_cycles
+                WHERE agent_id = ? ORDER BY woke_at DESC LIMIT ?""",
+                (agent_id, limit),
+            ).fetchall()
+            return [LifecycleCycle.model_validate_json(row["cycle_json"]) for row in rows]
+
+        return await self._run(operation)
+
+    async def save_wakeup(self, wakeup: LifecycleWakeup) -> None:
+        await self.initialize()
+
+        def operation(connection: sqlite3.Connection) -> None:
+            connection.execute(
+                """INSERT INTO lifecycle_wakeups
+                    (id, agent_id, status, scheduled_at, replace_key, priority,
+                     wakeup_json, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(id) DO UPDATE SET
+                    status = excluded.status,
+                    scheduled_at = excluded.scheduled_at,
+                    replace_key = excluded.replace_key,
+                    priority = excluded.priority,
+                    wakeup_json = excluded.wakeup_json,
+                    updated_at = excluded.updated_at""",
+                (
+                    wakeup.id,
+                    wakeup.agent_id,
+                    wakeup.status,
+                    wakeup.scheduled_at.isoformat(),
+                    wakeup.replace_key,
+                    wakeup.priority,
+                    wakeup.model_dump_json(),
+                    wakeup.updated_at.isoformat(),
+                ),
+            )
+
+        await self._run(operation)
+
+    async def schedule_wakeup(self, wakeup: LifecycleWakeup) -> list[LifecycleWakeup]:
+        await self.initialize()
+
+        def operation(connection: sqlite3.Connection) -> list[LifecycleWakeup]:
+            connection.execute("BEGIN IMMEDIATE")
+            cancelled: list[LifecycleWakeup] = []
+            now = utc_now()
+            if wakeup.replace_key is not None:
+                rows = connection.execute(
+                    """SELECT wakeup_json FROM lifecycle_wakeups
+                    WHERE agent_id = ? AND replace_key = ? AND status = ?""",
+                    (
+                        wakeup.agent_id,
+                        wakeup.replace_key,
+                        WakeupStatus.SCHEDULED,
+                    ),
+                ).fetchall()
+                for row in rows:
+                    existing = LifecycleWakeup.model_validate_json(row["wakeup_json"])
+                    existing.status = WakeupStatus.CANCELLED
+                    existing.updated_at = now
+                    connection.execute(
+                        """UPDATE lifecycle_wakeups
+                        SET status = ?, wakeup_json = ?, updated_at = ? WHERE id = ?""",
+                        (
+                            WakeupStatus.CANCELLED,
+                            existing.model_dump_json(),
+                            now.isoformat(),
+                            existing.id,
+                        ),
+                    )
+                    cancelled.append(existing)
+            connection.execute(
+                """INSERT INTO lifecycle_wakeups
+                    (id, agent_id, status, scheduled_at, replace_key, priority,
+                     wakeup_json, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    wakeup.id,
+                    wakeup.agent_id,
+                    wakeup.status,
+                    wakeup.scheduled_at.astimezone(UTC).isoformat(),
+                    wakeup.replace_key,
+                    wakeup.priority,
+                    wakeup.model_dump_json(),
+                    wakeup.updated_at.isoformat(),
+                ),
+            )
+            return cancelled
+
+        return await self._run(operation)
+
+    async def get_wakeup(self, wakeup_id: str) -> LifecycleWakeup | None:
+        await self.initialize()
+
+        def operation(connection: sqlite3.Connection) -> LifecycleWakeup | None:
+            row = connection.execute(
+                "SELECT wakeup_json FROM lifecycle_wakeups WHERE id = ?", (wakeup_id,)
+            ).fetchone()
+            return LifecycleWakeup.model_validate_json(row["wakeup_json"]) if row else None
+
+        return await self._run(operation)
+
+    async def claim_next_wakeup(
+        self, *, agent_id: str, due_before: datetime
+    ) -> LifecycleWakeup | None:
+        if due_before.tzinfo is None:
+            raise ValueError("due_before must be timezone-aware")
+        await self.initialize()
+
+        def operation(connection: sqlite3.Connection) -> LifecycleWakeup | None:
+            connection.execute("BEGIN IMMEDIATE")
+            row = connection.execute(
+                """SELECT id, wakeup_json FROM lifecycle_wakeups
+                WHERE agent_id = ? AND status = ? AND scheduled_at <= ?
+                ORDER BY priority DESC, scheduled_at ASC LIMIT 1""",
+                (
+                    agent_id,
+                    WakeupStatus.SCHEDULED,
+                    due_before.astimezone(UTC).isoformat(),
+                ),
+            ).fetchone()
+            if row is None:
+                return None
+            wakeup = LifecycleWakeup.model_validate_json(row["wakeup_json"])
+            wakeup.status = WakeupStatus.CLAIMED
+            wakeup.woke_at = due_before
+            wakeup.updated_at = due_before
+            updated = connection.execute(
+                """UPDATE lifecycle_wakeups
+                SET status = ?, wakeup_json = ?, updated_at = ?
+                WHERE id = ? AND status = ?""",
+                (
+                    WakeupStatus.CLAIMED,
+                    wakeup.model_dump_json(),
+                    due_before.isoformat(),
+                    wakeup.id,
+                    WakeupStatus.SCHEDULED,
+                ),
+            )
+            return wakeup if updated.rowcount == 1 else None
+
+        return await self._run(operation)
+
+    async def claim_wakeup(self, *, wakeup_id: str, claimed_at: datetime) -> LifecycleWakeup | None:
+        if claimed_at.tzinfo is None:
+            raise ValueError("claimed_at must be timezone-aware")
+        claimed_at = claimed_at.astimezone(UTC)
+        await self.initialize()
+
+        def operation(connection: sqlite3.Connection) -> LifecycleWakeup | None:
+            connection.execute("BEGIN IMMEDIATE")
+            row = connection.execute(
+                """SELECT wakeup_json FROM lifecycle_wakeups
+                WHERE id = ? AND status = ? AND scheduled_at <= ?""",
+                (wakeup_id, WakeupStatus.SCHEDULED, claimed_at.isoformat()),
+            ).fetchone()
+            if row is None:
+                return None
+            wakeup = LifecycleWakeup.model_validate_json(row["wakeup_json"])
+            wakeup.status = WakeupStatus.CLAIMED
+            wakeup.woke_at = claimed_at
+            wakeup.updated_at = claimed_at
+            connection.execute(
+                """UPDATE lifecycle_wakeups
+                SET status = ?, wakeup_json = ?, updated_at = ? WHERE id = ?""",
+                (
+                    WakeupStatus.CLAIMED,
+                    wakeup.model_dump_json(),
+                    claimed_at.isoformat(),
+                    wakeup.id,
+                ),
+            )
+            return wakeup
+
+        return await self._run(operation)
+
+    async def cancel_scheduled_wakeups(
+        self, *, agent_id: str, replace_key: str
+    ) -> list[LifecycleWakeup]:
+        await self.initialize()
+
+        def operation(connection: sqlite3.Connection) -> list[LifecycleWakeup]:
+            connection.execute("BEGIN IMMEDIATE")
+            rows = connection.execute(
+                """SELECT wakeup_json FROM lifecycle_wakeups
+                WHERE agent_id = ? AND replace_key = ? AND status = ?""",
+                (agent_id, replace_key, WakeupStatus.SCHEDULED),
+            ).fetchall()
+            cancelled: list[LifecycleWakeup] = []
+            now = utc_now()
+            for row in rows:
+                wakeup = LifecycleWakeup.model_validate_json(row["wakeup_json"])
+                wakeup.status = WakeupStatus.CANCELLED
+                wakeup.updated_at = now
+                connection.execute(
+                    """UPDATE lifecycle_wakeups
+                    SET status = ?, wakeup_json = ?, updated_at = ? WHERE id = ?""",
+                    (
+                        WakeupStatus.CANCELLED,
+                        wakeup.model_dump_json(),
+                        now.isoformat(),
+                        wakeup.id,
+                    ),
+                )
+                cancelled.append(wakeup)
+            return cancelled
+
+        return await self._run(operation)
+
+    async def list_wakeups(
+        self,
+        *,
+        agent_id: str,
+        status: WakeupStatus | None = None,
+        due_before: datetime | None = None,
+        limit: int = 100,
+    ) -> list[LifecycleWakeup]:
+        self._validate_lifecycle_limit(limit)
+        await self.initialize()
+
+        def operation(connection: sqlite3.Connection) -> list[LifecycleWakeup]:
+            clauses = ["agent_id = ?"]
+            parameters: list[str | int] = [agent_id]
+            if status is not None:
+                clauses.append("status = ?")
+                parameters.append(status)
+            if due_before is not None:
+                if due_before.tzinfo is None:
+                    raise ValueError("due_before must be timezone-aware")
+                clauses.append("scheduled_at <= ?")
+                parameters.append(due_before.isoformat())
+            parameters.append(limit)
+            rows = connection.execute(
+                f"""SELECT wakeup_json FROM lifecycle_wakeups
+                WHERE {" AND ".join(clauses)}
+                ORDER BY scheduled_at ASC, priority DESC LIMIT ?""",
+                parameters,
+            ).fetchall()
+            return [LifecycleWakeup.model_validate_json(row["wakeup_json"]) for row in rows]
+
+        return await self._run(operation)
+
+    async def save_session_summary(self, summary: SessionSummary) -> None:
+        await self.initialize()
+
+        def operation(connection: sqlite3.Connection) -> None:
+            connection.execute(
+                """INSERT INTO session_summaries
+                    (tenant_id, user_id, conversation_id, summary_json, updated_at)
+                VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT(tenant_id, user_id, conversation_id) DO UPDATE SET
+                    summary_json = excluded.summary_json,
+                    updated_at = excluded.updated_at""",
+                (
+                    summary.tenant_id,
+                    summary.user_id,
+                    summary.conversation_id,
+                    summary.model_dump_json(),
+                    summary.updated_at.isoformat(),
+                ),
+            )
+
+        await self._run(operation)
+
+    async def get_session_summary(
+        self, *, tenant_id: str, user_id: str, conversation_id: str
+    ) -> SessionSummary | None:
+        await self.initialize()
+
+        def operation(connection: sqlite3.Connection) -> SessionSummary | None:
+            row = connection.execute(
+                """SELECT summary_json FROM session_summaries
+                WHERE tenant_id = ? AND user_id = ? AND conversation_id = ?""",
+                (tenant_id, user_id, conversation_id),
+            ).fetchone()
+            return SessionSummary.model_validate_json(row["summary_json"]) if row else None
+
+        return await self._run(operation)
+
+    async def delete_session_summary(
+        self, *, tenant_id: str, user_id: str, conversation_id: str
+    ) -> None:
+        await self.initialize()
+
+        def operation(connection: sqlite3.Connection) -> None:
+            connection.execute(
+                """DELETE FROM session_summaries
+                WHERE tenant_id = ? AND user_id = ? AND conversation_id = ?""",
+                (tenant_id, user_id, conversation_id),
+            )
+
+        await self._run(operation)
+
+    async def save_job(self, job: AgentJob) -> None:
+        await self.initialize()
+
+        def operation(connection: sqlite3.Connection) -> None:
+            connection.execute(
+                """INSERT INTO agent_jobs
+                    (id, status, tenant_id, user_id, conversation_id, parent_job_id,
+                     priority, job_json, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(id) DO UPDATE SET
+                    status = excluded.status,
+                    tenant_id = excluded.tenant_id,
+                    user_id = excluded.user_id,
+                    conversation_id = excluded.conversation_id,
+                    parent_job_id = excluded.parent_job_id,
+                    priority = excluded.priority,
+                    job_json = excluded.job_json,
+                    updated_at = excluded.updated_at""",
+                (
+                    job.id,
+                    job.status,
+                    job.tenant_id,
+                    job.user_id,
+                    job.conversation_id,
+                    job.parent_job_id,
+                    job.priority,
+                    job.model_dump_json(),
+                    job.updated_at.isoformat(),
+                ),
+            )
+
+        await self._run(operation)
+
+    async def get_job(self, job_id: str) -> AgentJob | None:
+        await self.initialize()
+
+        def operation(connection: sqlite3.Connection) -> AgentJob | None:
+            row = connection.execute(
+                "SELECT job_json FROM agent_jobs WHERE id = ?", (job_id,)
+            ).fetchone()
+            return AgentJob.model_validate_json(row["job_json"]) if row else None
+
+        return await self._run(operation)
+
+    async def list_jobs(
+        self,
+        *,
+        tenant_id: str | None = None,
+        user_id: str | None = None,
+        conversation_id: str | None = None,
+        parent_job_id: str | None = None,
+        status: JobStatus | None = None,
+        limit: int = 100,
+    ) -> list[AgentJob]:
+        self._validate_job_limit(limit)
+        await self.initialize()
+
+        def operation(connection: sqlite3.Connection) -> list[AgentJob]:
+            clauses: list[str] = []
+            parameters: list[str | int] = []
+            filters = {
+                "tenant_id": tenant_id,
+                "user_id": user_id,
+                "conversation_id": conversation_id,
+                "parent_job_id": parent_job_id,
+                "status": status,
+            }
+            for column, value in filters.items():
+                if value is not None:
+                    clauses.append(f"{column} = ?")
+                    parameters.append(value)
+            where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
+            parameters.append(limit)
+            rows = connection.execute(
+                f"""SELECT job_json FROM agent_jobs {where}
+                ORDER BY priority DESC, updated_at DESC LIMIT ?""",
+                parameters,
+            ).fetchall()
+            return [AgentJob.model_validate_json(row["job_json"]) for row in rows]
+
+        return await self._run(operation)
+
+    async def count_jobs(
+        self,
+        *,
+        tenant_id: str,
+        user_id: str,
+        requested_by_agent_id: str | None = None,
+        parent_run_id: str | None = None,
+        active_only: bool = False,
+    ) -> int:
+        await self.initialize()
+
+        def operation(connection: sqlite3.Connection) -> int:
+            clauses = ["tenant_id = ?", "user_id = ?"]
+            parameters: list[str] = [tenant_id, user_id]
+            if requested_by_agent_id is not None:
+                clauses.append("json_extract(job_json, '$.requested_by_agent_id') = ?")
+                parameters.append(requested_by_agent_id)
+            if parent_run_id is not None:
+                clauses.append("json_extract(job_json, '$.parent_run_id') = ?")
+                parameters.append(parent_run_id)
+            if active_only:
+                placeholders = ",".join("?" for _ in TERMINAL_JOB_STATUSES)
+                clauses.append(f"status NOT IN ({placeholders})")
+                parameters.extend(str(status) for status in TERMINAL_JOB_STATUSES)
+            row = connection.execute(
+                f"SELECT COUNT(*) AS count FROM agent_jobs WHERE {' AND '.join(clauses)}",
+                parameters,
+            ).fetchone()
+            return int(row["count"])
+
+        return await self._run(operation)
+
+    async def claim_job(self, job_id: str) -> AgentJob | None:
+        await self.initialize()
+
+        def operation(connection: sqlite3.Connection) -> AgentJob | None:
+            connection.execute("BEGIN IMMEDIATE")
+            row = connection.execute(
+                "SELECT job_json FROM agent_jobs WHERE id = ? AND status = ?",
+                (job_id, JobStatus.QUEUED),
+            ).fetchone()
+            if row is None:
+                return None
+            job = AgentJob.model_validate_json(row["job_json"])
+            now = utc_now()
+            claimed = job.model_copy(
+                update={
+                    "status": JobStatus.RUNNING,
+                    "started_at": job.started_at or now,
+                    "updated_at": now,
+                }
+            )
+            updated = connection.execute(
+                """UPDATE agent_jobs SET status = ?, job_json = ?, updated_at = ?
+                WHERE id = ? AND status = ?""",
+                (
+                    JobStatus.RUNNING,
+                    claimed.model_dump_json(),
+                    now.isoformat(),
+                    job_id,
+                    JobStatus.QUEUED,
+                ),
+            )
+            return claimed if updated.rowcount == 1 else None
+
+        return await self._run(operation)
+
+    async def requeue_recoverable_jobs(self, *, limit: int = 100) -> list[AgentJob]:
+        self._validate_job_limit(limit)
+        await self.initialize()
+
+        def operation(connection: sqlite3.Connection) -> list[AgentJob]:
+            connection.execute("BEGIN IMMEDIATE")
+            excluded = [*TERMINAL_JOB_STATUSES, JobStatus.CANCEL_REQUESTED]
+            placeholders = ",".join("?" for _ in excluded)
+            rows = connection.execute(
+                f"""SELECT id, job_json FROM agent_jobs
+                WHERE status NOT IN ({placeholders})
+                ORDER BY priority DESC, updated_at ASC LIMIT ?""",
+                [*excluded, limit],
+            ).fetchall()
+            now = utc_now()
+            requeued: list[AgentJob] = []
+            for row in rows:
+                job = AgentJob.model_validate_json(row["job_json"])
+                updated = job.model_copy(
+                    update={
+                        "status": JobStatus.QUEUED,
+                        "queued_at": now,
+                        "started_at": None,
+                        "updated_at": now,
+                    }
+                )
+                connection.execute(
+                    """UPDATE agent_jobs SET status = ?, job_json = ?, updated_at = ?
+                    WHERE id = ?""",
+                    (
+                        JobStatus.QUEUED,
+                        updated.model_dump_json(),
+                        now.isoformat(),
+                        updated.id,
+                    ),
+                )
+                requeued.append(updated)
+            return requeued
+
+        return await self._run(operation)
+
+    async def finalize_cancel_requested_jobs(self, *, limit: int = 100) -> list[AgentJob]:
+        self._validate_job_limit(limit)
+        await self.initialize()
+
+        def operation(connection: sqlite3.Connection) -> list[AgentJob]:
+            connection.execute("BEGIN IMMEDIATE")
+            rows = connection.execute(
+                """SELECT id, job_json FROM agent_jobs WHERE status = ?
+                ORDER BY updated_at ASC LIMIT ?""",
+                (JobStatus.CANCEL_REQUESTED, limit),
+            ).fetchall()
+            now = utc_now()
+            cancelled: list[AgentJob] = []
+            for row in rows:
+                job = AgentJob.model_validate_json(row["job_json"])
+                updated = job.model_copy(
+                    update={
+                        "status": JobStatus.CANCELLED,
+                        "completed_at": now,
+                        "updated_at": now,
+                    }
+                )
+                connection.execute(
+                    """UPDATE agent_jobs SET status = ?, job_json = ?, updated_at = ?
+                    WHERE id = ? AND status = ?""",
+                    (
+                        JobStatus.CANCELLED,
+                        updated.model_dump_json(),
+                        now.isoformat(),
+                        updated.id,
+                        JobStatus.CANCEL_REQUESTED,
+                    ),
+                )
+                cancelled.append(updated)
+            return cancelled
+
+        return await self._run(operation)
+
+    @staticmethod
+    def _validate_lifecycle_limit(limit: int) -> None:
+        if not 1 <= limit <= 1000:
+            raise ValueError("limit must be between 1 and 1000")
+
+    @staticmethod
+    def _validate_job_limit(limit: int) -> None:
+        if not 1 <= limit <= 1000:
+            raise ValueError("limit must be between 1 and 1000")
+
     async def _run(self, operation: Callable[[sqlite3.Connection], T]) -> T:
         def execute() -> T:
             connection = sqlite3.connect(self.path, timeout=30)
@@ -432,5 +1038,45 @@ class SQLitePersistence:
             );
             CREATE INDEX IF NOT EXISTS idx_checkpoints_task_sequence
                 ON task_checkpoints(task_id, sequence);
+            CREATE TABLE IF NOT EXISTS lifecycle_runtime (
+                agent_id TEXT PRIMARY KEY, runtime_json TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS lifecycle_cycles (
+                id TEXT PRIMARY KEY, agent_id TEXT NOT NULL, status TEXT NOT NULL,
+                woke_at TEXT NOT NULL, cycle_json TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_lifecycle_cycles_agent_woke
+                ON lifecycle_cycles(agent_id, woke_at DESC);
+            CREATE TABLE IF NOT EXISTS lifecycle_wakeups (
+                id TEXT PRIMARY KEY, agent_id TEXT NOT NULL, status TEXT NOT NULL,
+                scheduled_at TEXT NOT NULL, replace_key TEXT, priority INTEGER NOT NULL,
+                wakeup_json TEXT NOT NULL, updated_at TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_lifecycle_wakeups_due
+                ON lifecycle_wakeups(agent_id, status, scheduled_at, priority);
+            CREATE INDEX IF NOT EXISTS idx_lifecycle_wakeups_replace
+                ON lifecycle_wakeups(agent_id, replace_key, status);
+            CREATE TABLE IF NOT EXISTS session_summaries (
+                tenant_id TEXT NOT NULL, user_id TEXT NOT NULL,
+                conversation_id TEXT NOT NULL, summary_json TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                PRIMARY KEY (tenant_id, user_id, conversation_id)
+            );
+            CREATE INDEX IF NOT EXISTS idx_session_summaries_updated
+                ON session_summaries(updated_at);
+            CREATE TABLE IF NOT EXISTS agent_jobs (
+                id TEXT PRIMARY KEY, status TEXT NOT NULL,
+                tenant_id TEXT NOT NULL, user_id TEXT NOT NULL,
+                conversation_id TEXT, parent_job_id TEXT,
+                priority INTEGER NOT NULL, job_json TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_agent_jobs_owner_updated
+                ON agent_jobs(tenant_id, user_id, updated_at DESC);
+            CREATE INDEX IF NOT EXISTS idx_agent_jobs_status_priority
+                ON agent_jobs(status, priority DESC, updated_at);
+            CREATE INDEX IF NOT EXISTS idx_agent_jobs_parent
+                ON agent_jobs(parent_job_id, updated_at);
             """
         )

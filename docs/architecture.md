@@ -52,11 +52,67 @@ Long work crosses a narrow task-submission port. The realtime layer does not cre
 scheduler or execute workers. Agent selection is allowlisted, while tenant/user
 identity comes from trusted session state rather than model-generated arguments.
 
+## Background jobs
+
+The job layer is a durable, user-facing projection over the existing Task Runtime.
+It does not introduce a second scheduler or worker protocol. Job submission returns
+immediately, while the Task Scheduler continues to own retries, resource locks,
+checkpoints, timeouts, and cooperative cancellation. Text and realtime surfaces must
+submit through the same `JobManager` composition.
+
+Recovery is explicit at exclusive application startup and has at-least-once
+semantics. Side-effecting workers therefore remain subject to the same approval and
+idempotency controls as synchronous tools.
+
+## Trigger routing
+
+External events pass through deterministic filtering, tenant-aware rules, replay
+deduplication, debounce, and coalescing before they can schedule a lifecycle wakeup.
+The router treats payloads as untrusted data, never evaluates conditions as code,
+and uses the host receipt clock for scheduling. It composes with `WakeupManager`
+rather than owning a scheduler or invoking a model.
+
+Objectives preserve durable intent separately from conversation text. Watches attach
+structured external conditions to objectives and resume them through lifecycle
+wakeups. Attention severity is evaluated deterministically; notification delivery is
+an injected host port, not an implicit platform side effect.
+
+## Runtime registries and budgets
+
+Model routing returns policy-approved identifiers and never constructs provider
+clients. Budget accounting is evaluated against trusted tenant/user/run/job context;
+crossing a limit fails closed unless policy explicitly chooses a bounded degradation,
+approval, or review path. Prompt and skill definitions are immutable and versioned,
+while skill compilation targets the existing Task Runtime rather than introducing a
+second executor. Artifacts are owner-scoped references for large outputs, and
+capability manifests are inspectable declarations rather than authorization grants.
+
+## Evaluation and production controls
+
+Evaluation targets are injected and suites remain declarative. Replay consumes
+canonical events as observations and never executes tools; simulated agent runs add a
+deny-precedence side-effect policy. Dead-letter records are bounded, redacted, and
+owner-scoped. Backpressure admission and health monitoring are separate ports so
+distributed coordination and deployment probes can replace local references without
+changing the task or agent runtimes. Credentials enter provider adapters through a
+server-side `SecretProvider` boundary and are never runtime events or memory.
+
+Metrics use a fixed catalog and trusted identity fields rather than arbitrary labels.
+The core emits through an injected sink; aggregation, export, retention, dashboards,
+and alerts remain deployment responsibilities.
+
+Exclusive production ownership uses the provider-neutral `LeaseStore`. Its Redis
+adapter issues fencing tokens and hashes resource identifiers before storage; hosts
+must validate fencing tokens at the protected durable write boundary. Job terminal
+results are delivered through an injected notifier that schedules a lifecycle wake,
+while exhausted failures may be recorded in the shared dead-letter abstraction.
+
 ## Tool safety order
 
 ```text
 Input validation
-  -> permission intersection
+  -> central policy evaluation (including permission intersection)
+  -> policy modification revalidation
   -> approval gate
   -> idempotency lookup
   -> timeout/retry execution

@@ -22,9 +22,7 @@ class TaskExecutionContext:
         self.control = control
         self.progress_callback = progress_callback
 
-    async def checkpoint(
-        self, *, state: dict[str, Any] | None = None
-    ) -> list[ControlMessage]:
+    async def checkpoint(self, *, state: dict[str, Any] | None = None) -> list[ControlMessage]:
         return await self.control.checkpoint(self.task_id, state=state)
 
     async def report_progress(
@@ -36,9 +34,7 @@ class TaskExecutionContext:
 
 
 class Worker(Protocol):
-    async def execute(
-        self, task: AgentTask, context: TaskExecutionContext
-    ) -> dict[str, Any]: ...
+    async def execute(self, task: AgentTask, context: TaskExecutionContext) -> dict[str, Any]: ...
 
 
 WorkerFunction = Callable[[AgentTask, TaskExecutionContext], Awaitable[dict[str, Any]]]
@@ -48,9 +44,7 @@ class FunctionWorker:
     def __init__(self, function: WorkerFunction) -> None:
         self.function = function
 
-    async def execute(
-        self, task: AgentTask, context: TaskExecutionContext
-    ) -> dict[str, Any]:
+    async def execute(self, task: AgentTask, context: TaskExecutionContext) -> dict[str, Any]:
         return await self.function(task, context)
 
 

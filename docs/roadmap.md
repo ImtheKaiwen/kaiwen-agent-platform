@@ -34,15 +34,74 @@ implementation status for the reusable packages.
       phone-channel realtime records, and DTMF normalization. Provider provisioning
       and product routing remain consumer deployment concerns; scheduled objectives
       and automatic calls remain R9.
+- [x] Phase R5A.1: deterministic lifecycle skeleton, durable wakeup/cycle/runtime
+      ports, atomic due-wakeup claims, in-memory and SQLite reference stores,
+      framework-neutral runtime controls, lifecycle event contracts, and a host
+      scheduler adapter. Model reasoning, policy-controlled self-scheduling, and
+      product HTTP routes remain later integration work.
+- [x] Phase R5B.1: central policy decision model and registry, deterministic
+      precedence, capability/runtime/scheduling/delegation policies, existing tool
+      permission and approval adapters, policy audit/events, and fail-closed tool
+      integration. Product policy definitions remain consumer-owned.
+- [x] Phase R5C.1: bounded context builder, prioritized source budgets, recent
+      conversation and session-summary adapters, short-term session summary
+      retention, in-memory and SQLite summary stores, and explicit forget support.
+      Long-term admission, semantic memory, and model-generated summarization remain
+      later phases.
+- [x] Phase R5D.1: long-term memory models, secret-first candidate admission,
+      policy-gated user/project namespaces, duplicate and conflict handling,
+      review inbox, bounded hybrid retrieval, edit/forget controls, a framework-neutral
+      admin contract, deterministic in-memory storage, and an optional PostgreSQL +
+      pgvector production adapter. Model-driven extraction, background consolidation,
+      shared-project ACL composition, and retention workers remain later work.
+- [x] Phase R5F.1: non-blocking background job submission over the existing Task
+      Runtime, immutable job/task/trace IDs, durable in-memory and SQLite job stores,
+      progress/result events, cooperative cancellation, parent-child progress, and
+      explicit restart recovery. Distributed leases, stuck-job detection, and
+      model-driven delegation remain later phases.
+- [x] Phase R5F.2: fail-closed subagent delegation over the shared JobManager,
+      strict capability subset inheritance, central allowlist/depth/parallel/per-run
+      policy limits, and shared text/realtime bridges. Approval workflow composition
+      for delegation remains host-owned.
+- [x] Phase R5H.1: deterministic trigger filtering, tenant-aware rules, replay
+      deduplication, bounded debounce/coalescing, lifecycle wakeup delivery, and
+      canonical trigger events. Durable distributed trigger coordination remains R7.
+- [x] Phase R5I.1 / R5J.1 / R5K.1: persistent objective state machine,
+      structured event/webhook/polling watches, watch-driven objective resume and
+      lifecycle wakeups, deterministic attention severity, optional host notification
+      port, and SQLite reference persistence. Distributed claims and notification
+      delivery policy remain production composition work.
+- [x] Phase R6A-R6F.1: policy-gated provider-neutral model routing, hierarchical
+      token/cost/tool/job budgets with restart-safe SQLite reference accounting,
+      immutable prompt and declarative skill registries, owner-scoped bounded
+      artifacts, and versioned capability manifests. Distributed atomic budget
+      reservations, product definitions, and production object storage remain host
+      or R7 concerns.
+- [x] Phase R7A-R7F.1: structured evaluation suites, observation-only event replay,
+      fail-closed simulation policy, redacted tenant-scoped DLQ with SQLite reference
+      persistence, process-local backpressure leases, heartbeat-derived health, and
+      an allowlisted server-side secret-provider abstraction. Distributed admission,
+      durable production probes, hosted vault adapters, load tests, and operational
+      alerting remain production composition work.
+- [x] Phase R7 production-hardening slice: atomic SQLite multi-scope budget
+      reservations, provider-neutral distributed lease contracts, an optional Redis
+      lease adapter with fencing tokens, job-result lifecycle wakeups, and failed-job
+      DLQ composition, plus a fixed-catalog tenant-scoped metrics port. Distributed
+      rate admission, live Redis/load validation, production metric exporters, and
+      deployment-specific fencing enforcement remain production work.
 
 ## Next
 
 - [ ] Phase R4 / G: authenticated portfolio admin integration, WebRTC bootstrap route,
       Dynamic Island voice states, task notifications, and semantic UI dispatch.
-- [ ] Phase R5: short-term context, memory recall, and memory write policy.
-- [ ] Phase R6: production tenant isolation, quotas, policy configuration, and
-      tenant-scoped observability.
-- [ ] Phase R7: production scaling, distributed coordination, recovery, and load tests.
+- [ ] Phase R5A.2: policy-controlled lifecycle actions, reasoning integration, and
+      production scheduler composition.
+- [ ] Phase R5D.2: observable candidate extraction, consolidation/decay jobs,
+      shared-project ACL composition, retention enforcement, and memory evaluations.
+- [ ] Phase R6.2: production tenant isolation composition, multi-node quota
+      reservations, policy configuration, and tenant-scoped observability.
+- [ ] Phase R7: remaining production scaling, distributed rate admission, recovery,
+      live-adapter load tests, and operational alerting.
 - [ ] Phase R9: scheduled/objective calls, daily reports, explicit consent, and call
       summaries written through the memory policy.
 - [ ] Phase R10: security hardening, abuse controls, retention enforcement, and

@@ -307,7 +307,8 @@ def _response_id(event: Mapping[str, Any]) -> str | None:
         return direct
     response = event.get("response")
     if isinstance(response, Mapping) and isinstance(response.get("id"), str):
-        return response["id"]
+        response_id = response["id"]
+        return str(response_id)
     return None
 
 

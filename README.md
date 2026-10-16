@@ -45,8 +45,24 @@ then run:
 Current implementation status is tracked in [`docs/roadmap.md`](docs/roadmap.md).
 Persistence and event delivery are documented in
 [`docs/persistence.md`](docs/persistence.md).
+Bounded context, short-term summaries, and policy-gated long-term memory are
+documented in [`docs/context-memory.md`](docs/context-memory.md) and
+[`docs/long-term-memory.md`](docs/long-term-memory.md).
 Task graphs, workers, control messages, and scheduling are documented in
 [`docs/tasks.md`](docs/tasks.md).
+Non-blocking background work and restart recovery are documented in
+[`docs/jobs.md`](docs/jobs.md).
+Deterministic event filtering, dedupe, debounce, coalescing, and lifecycle wakeup
+delivery are documented in [`docs/triggers.md`](docs/triggers.md).
+Persistent goals, event/webhook/polling watches, and deterministic attention severity
+are documented in
+[`docs/objectives-watches-attention.md`](docs/objectives-watches-attention.md).
+Policy-gated model routing, budgets, immutable prompt/skill registries, artifacts,
+and capability manifests are documented in
+[`docs/runtime-registries.md`](docs/runtime-registries.md).
+Evaluation, replay/simulation, DLQ, backpressure, distributed leases, tenant-scoped
+metrics, heartbeat health, and secret-provider boundaries are documented in
+[`docs/production-controls.md`](docs/production-controls.md).
 The browser runtime, semantic action boundary, and React bindings are documented
 in [`docs/ui-agent.md`](docs/ui-agent.md).
 Release registry setup and the protected publishing workflow are documented in

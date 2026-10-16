@@ -22,4 +22,3 @@ def test_python_accepts_canonical_valid_event_fixture() -> None:
 def test_python_rejects_canonical_invalid_event_fixture() -> None:
     with pytest.raises(ValidationError):
         AgentEvent.model_validate(read_fixture("event.invalid.json"))
-

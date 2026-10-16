@@ -48,9 +48,7 @@ def test_agent_executes_tool_and_completes() -> None:
     result = asyncio.run(
         agent.run(
             AgentInput(text="Beni selamla"),
-            context=AgentContext(
-                session_id="session_1", permissions=frozenset({"greeting.read"})
-            ),
+            context=AgentContext(session_id="session_1", permissions=frozenset({"greeting.read"})),
         )
     )
 
@@ -59,6 +57,8 @@ def test_agent_executes_tool_and_completes() -> None:
     assert result.tool_results[0].output == {"message": "Merhaba Kaiwen"}
     assert [event.type for event in events.events] == [
         "run.started",
+        "policy.allowed",
+        "policy.allowed",
         "tool.started",
         "tool.completed",
         "run.completed",
@@ -118,3 +118,60 @@ def test_model_usage_is_accumulated_and_emitted() -> None:
     usage_event = next(event for event in events.events if event.type == "run.status")
     assert usage_event.payload["kind"] == "model_usage"
     assert usage_event.payload["model"] == "test-model"
+
+
+def test_agent_preserves_trusted_identity_in_effective_context() -> None:
+    captured: AgentContext | None = None
+
+    @tool(
+        name="context.inspect",
+        description="Inspect context",
+        input_model=GreetingInput,
+        permissions={"context.read"},
+    )
+    async def inspect_context(context: AgentContext, arguments: GreetingInput) -> dict[str, str]:
+        nonlocal captured
+        del arguments
+        captured = context
+        return {"ok": "true"}
+
+    agent = Agent(
+        name="admin-agent",
+        model=FakeModelProvider(
+            [
+                ModelResponse(
+                    tool_calls=[
+                        ToolCall(
+                            id="call_1",
+                            name="context.inspect",
+                            arguments={"name": "ignored"},
+                        )
+                    ]
+                ),
+                ModelResponse(text="Done"),
+            ]
+        ),
+        tools=[inspect_context],
+        permissions={"context.read"},
+    )
+    asyncio.run(
+        agent.run(
+            AgentInput(text="Inspect"),
+            context=AgentContext(
+                session_id="session_1",
+                tenant_id="tenant_1",
+                user_id="user_1",
+                conversation_id="conversation_1",
+                client_id="client_1",
+                environment="production",
+                permissions=frozenset({"context.read"}),
+            ),
+        )
+    )
+    assert captured is not None
+    assert captured.agent_id == "admin-agent"
+    assert captured.tenant_id == "tenant_1"
+    assert captured.user_id == "user_1"
+    assert captured.conversation_id == "conversation_1"
+    assert captured.client_id == "client_1"
+    assert captured.environment == "production"

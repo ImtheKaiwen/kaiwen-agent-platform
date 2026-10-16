@@ -34,14 +34,10 @@ def test_approval_is_required_and_can_be_denied() -> None:
         return arguments.value
 
     call = ToolCall(id="call_1", name="records.write", arguments={"value": "x"})
-    context = AgentContext(
-        session_id="session_1", permissions=frozenset({"records.write"})
-    )
+    context = AgentContext(session_id="session_1", permissions=frozenset({"records.write"}))
 
     with pytest.raises(ApprovalRequiredError):
-        asyncio.run(
-            ToolExecutor().execute(write_record, call, context, execution_scope="run_1")
-        )
+        asyncio.run(ToolExecutor().execute(write_record, call, context, execution_scope="run_1"))
     with pytest.raises(ApprovalDeniedError):
         asyncio.run(
             ToolExecutor(approval_gate=StaticApprovalGate(False)).execute(
@@ -75,9 +71,7 @@ def test_side_effecting_tool_is_idempotent_per_execution_key() -> None:
             arguments={"value": "saved"},
             idempotency_key="record:test-key",
         )
-        context = AgentContext(
-            session_id="session_1", permissions=frozenset({"records.write"})
-        )
+        context = AgentContext(session_id="session_1", permissions=frozenset({"records.write"}))
         first = await executor.execute(write_record, call, context, execution_scope="run_1")
         second = await executor.execute(write_record, call, context, execution_scope="run_2")
         assert first.output == second.output == "saved"

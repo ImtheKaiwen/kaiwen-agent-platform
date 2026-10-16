@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+- Add deterministic lifecycle, central policy, bounded context, short-term and
+  policy-gated long-term memory foundations.
+- Add background jobs over the existing Task Runtime, bounded subagent delegation,
+  trigger routing, objectives, watches, and attention evaluation.
+- Add policy-gated model routing, atomic hierarchical budgets, immutable prompt and
+  skill registries, artifacts, and capability manifests.
+- Add evaluation, observation-only replay, redacted dead letters, backpressure,
+  health, server-side secret providers, distributed leases, and tenant-scoped
+  metrics.
+- Add optional PostgreSQL/pgvector memory and Redis coordination adapters.
+
 ## 0.4.0a1 — 2026-09-24
 
 - Add provider-neutral inbound phone-call contracts and retry-safe webhook decision

@@ -146,7 +146,5 @@ class InMemoryRealtimeSessionStore:
 
     async def list_active(self) -> list[RealtimeSessionRecord]:
         return [
-            session.model_copy(deep=True)
-            for session in self._sessions.values()
-            if session.active
+            session.model_copy(deep=True) for session in self._sessions.values() if session.active
         ]

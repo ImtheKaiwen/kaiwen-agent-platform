@@ -68,6 +68,8 @@ class AgentTask(BaseModel):
     progress: float | None = Field(default=None, ge=0, le=1)
     error: str | None = None
     error_code: str | None = None
+    capabilities: frozenset[str] = Field(default_factory=frozenset)
+    delegation_depth: int = Field(default=0, ge=0)
     metadata: dict[str, Any] = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=utc_now)
     started_at: datetime | None = None

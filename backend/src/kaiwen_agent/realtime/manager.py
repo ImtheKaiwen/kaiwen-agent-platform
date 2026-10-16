@@ -201,11 +201,7 @@ class RealtimeSessionManager:
         tenant_sessions = [item for item in active if item.tenant_id == tenant_id]
         if len(tenant_sessions) >= self._limits.max_sessions_per_tenant:
             raise RealtimeSessionLimitError("Tenant realtime session limit reached")
-        user_sessions = [
-            item
-            for item in tenant_sessions
-            if item.user_id == user_id
-        ]
+        user_sessions = [item for item in tenant_sessions if item.user_id == user_id]
         if len(user_sessions) >= self._limits.max_sessions_per_user:
             raise RealtimeSessionLimitError("User realtime session limit reached")
 

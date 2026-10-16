@@ -63,9 +63,7 @@ def test_bridge_assembles_voice_transcripts_into_durable_messages() -> None:
             RealtimeProviderEvent(type=RealtimeEventType.TURN_COMPLETED),
         )
 
-        messages = await store.list_messages(
-            tenant_id="tenant", conversation_id="conversation"
-        )
+        messages = await store.list_messages(tenant_id="tenant", conversation_id="conversation")
         assert [(item.role, item.text) for item in messages] == [
             (ConversationRole.USER, "Merhaba"),
             (ConversationRole.ASSISTANT, "Selam"),
@@ -87,9 +85,7 @@ def test_bridge_persists_text_and_keeps_tenants_isolated() -> None:
         message = await bridge.send_text(session.id, "Planı hazırla")
         assert message.modality == ConversationModality.TEXT
         assert provider.connections[0].sent_text == ["Planı hazırla"]
-        assert await store.list_messages(
-            tenant_id="other", conversation_id="conversation"
-        ) == []
+        assert await store.list_messages(tenant_id="other", conversation_id="conversation") == []
 
     asyncio.run(scenario())
 
@@ -108,9 +104,7 @@ def test_bridge_flushes_partial_transcript_without_audio_bytes() -> None:
             ),
         )
         await bridge.flush(session, partial=True)
-        messages = await store.list_messages(
-            tenant_id="tenant", conversation_id="conversation"
-        )
+        messages = await store.list_messages(tenant_id="tenant", conversation_id="conversation")
         assert messages[0].metadata == {"partial": True}
         assert "audio" not in messages[0].model_dump()
 

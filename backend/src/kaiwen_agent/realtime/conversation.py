@@ -79,8 +79,7 @@ class InMemoryConversationStore:
             messages = [
                 item
                 for item in self._messages
-                if item.tenant_id == tenant_id
-                and item.conversation_id == conversation_id
+                if item.tenant_id == tenant_id and item.conversation_id == conversation_id
             ]
             if after_id is not None:
                 index = next(

@@ -81,8 +81,7 @@ class TaskGraph:
                 continue
             dependencies = [self._tasks[item] for item in task.dependencies]
             dependency_failed = any(
-                item.status in {TaskStatus.FAILED, TaskStatus.CANCELLED}
-                for item in dependencies
+                item.status in {TaskStatus.FAILED, TaskStatus.CANCELLED} for item in dependencies
             )
             if dependency_failed:
                 if task.status == TaskStatus.PENDING:

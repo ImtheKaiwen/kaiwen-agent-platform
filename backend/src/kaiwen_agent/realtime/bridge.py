@@ -79,9 +79,7 @@ class RealtimeBridge:
                 text = event.payload.get("text")
                 if isinstance(text, str) and text.strip():
                     async with self._lock:
-                        buffer = self._buffers.setdefault(
-                            (session.id, role), _TranscriptBuffer()
-                        )
+                        buffer = self._buffers.setdefault((session.id, role), _TranscriptBuffer())
                         buffer.parts = [text]
                 await self._finalize(session, role, partial=False)
             return

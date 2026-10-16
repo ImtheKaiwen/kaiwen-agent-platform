@@ -23,4 +23,3 @@ class ToolRegistry:
 
     def definitions(self) -> tuple[ToolDefinition, ...]:
         return tuple(self._tools.values())
-

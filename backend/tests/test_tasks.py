@@ -124,9 +124,7 @@ def test_retry_policy_is_deterministic() -> None:
         )
         registry = WorkerRegistry()
         registry.register("worker", FunctionWorker(execute))
-        scheduler = TaskScheduler(
-            graph=TaskGraph([task]), workers=registry, events=events
-        )
+        scheduler = TaskScheduler(graph=TaskGraph([task]), workers=registry, events=events)
         await scheduler.run()
         assert task.status == TaskStatus.COMPLETED
         assert task.attempts == 2
@@ -166,26 +164,20 @@ def test_running_task_cancels_at_checkpoint() -> None:
 def test_mailbox_pause_resume_instruction_and_checkpoint() -> None:
     async def scenario() -> None:
         control = RunControl()
-        await control.send(
-            "task_1", ControlMessage(type="pause", created_by="user")
-        )
+        await control.send("task_1", ControlMessage(type="pause", created_by="user"))
         waiting = asyncio.create_task(control.checkpoint("task_1", state={"step": 1}))
         await asyncio.sleep(0)
         assert not waiting.done()
         await control.send(
             "task_1", ControlMessage(type="instruction", content="skip cache", created_by="user")
         )
-        await control.send(
-            "task_1", ControlMessage(type="resume", created_by="user")
-        )
+        await control.send("task_1", ControlMessage(type="resume", created_by="user"))
         messages = await waiting
         assert any(message.content == "skip cache" for message in messages)
         checkpoint = await control.checkpoints.latest_checkpoint("task_1")
         assert checkpoint is not None and checkpoint.state == {"step": 1}
 
-        await control.send(
-            "task_1", ControlMessage(type="cancel", created_by="user")
-        )
+        await control.send("task_1", ControlMessage(type="cancel", created_by="user"))
         with pytest.raises(TaskCancelledError):
             await control.checkpoint("task_1")
 

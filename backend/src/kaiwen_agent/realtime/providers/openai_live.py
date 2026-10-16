@@ -432,9 +432,7 @@ def _provider_event(
     delivery: RealtimeEventDelivery = RealtimeEventDelivery.EPHEMERAL,
 ) -> RealtimeProviderEvent:
     payload = {
-        key: value
-        for key, value in event.items()
-        if key not in {"type", "event_id", "error"}
+        key: value for key, value in event.items() if key not in {"type", "event_id", "error"}
     }
     if role is not None:
         payload["role"] = role
