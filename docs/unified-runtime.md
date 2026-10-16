@@ -166,6 +166,14 @@ Add lightweight STT/TTS/transcript contracts and fake adapters that compose with
 existing Realtime Core. Filesystem, shell, browser, MCP, document, CI, and domain
 integrations remain optional host adapters.
 
+Speech slice implemented: provider-neutral recognition, synthesis, transcript,
+metadata-only audio artifact reference, and ephemeral pipeline contracts are
+available with deterministic fakes. The pipeline requires trusted explicit audio
+processing permission, carries one tenant/user/session/conversation identity through
+STT, text handling, and TTS, and never persists raw audio. Native realtime speech
+continues to use the separate Realtime Core. Heavy engines and ecosystem adapters
+remain optional follow-up work.
+
 ### U10 — Hardening and DX
 
 Complete crash, multitenant, prompt-injection, failover, pressure, budget, and cold

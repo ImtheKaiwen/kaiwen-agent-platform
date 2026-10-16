@@ -113,8 +113,11 @@ implementation status for the reusable packages.
 - [x] Phase U8: technical model capabilities, data-locality-aware routing, and
       optional Gemini/Ollama adapters that return tool proposals without executing
       tools inside provider SDKs.
-- [ ] Phase U9-U10: speech ports, security/load hardening, examples, and developer
-      documentation.
+- [x] Phase U9 speech slice: provider-neutral STT/TTS and transcript contracts,
+      explicit audio-processing consent, an ephemeral pipeline, and deterministic
+      fake adapters. Heavy speech engines and ecosystem tools remain optional.
+- [ ] Phase U9 ecosystem/U10: optional filesystem/MCP/document adapters,
+      security/load hardening, examples, and developer documentation.
 
 - [ ] Phase R4 / G: authenticated portfolio admin integration, WebRTC bootstrap route,
       Dynamic Island voice states, task notifications, and semantic UI dispatch.

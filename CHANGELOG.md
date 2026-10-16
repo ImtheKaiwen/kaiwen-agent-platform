@@ -30,6 +30,8 @@
   runtime, with least-privilege member selection and bounded structured handoffs.
 - Add technical model capability records, fail-closed data-locality routing, and
   optional Gemini/Ollama adapters with centrally executed tool proposals.
+- Add provider-neutral speech recognition, synthesis, transcript, and ephemeral
+  pipeline contracts with explicit audio-processing permission and deterministic fakes.
 
 ## 0.4.0a1 — 2026-09-24
 
