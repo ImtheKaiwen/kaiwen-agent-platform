@@ -12,6 +12,13 @@ The core exposes four independent persistence boundaries:
 Applications may use one adapter for all four boundaries or compose separate stores.
 The core does not require SQLAlchemy, a web framework, or a specific database.
 
+`AgentEvent` can carry trusted `tenant_id` and `user_id` ownership alongside its
+session ID. External/user-facing readers should depend on `ScopedEventStore` and call
+`list_events_scoped(EventScope(...))`, which requires an exact tenant, user, and
+session match. The original `list_events(session_id=...)` method remains available
+for backward-compatible trusted internal replay and must not be exposed directly as
+an authorization boundary.
+
 Durable workflow composition adds three separate boundaries: `RuntimeRunStore` for
 owner-scoped run state and immutable version pins, `ActionIntentStore` for external
 side-effect state and receipts, and `DurableApprovalStore` for one-time decisions.
@@ -38,6 +45,12 @@ agent = Agent(
 
 SQLite is the reference and local-development adapter. Multi-instance deployments
 should implement the same ports with PostgreSQL or another transactional store.
+
+Existing SQLite event tables gain nullable ownership columns in place. Historical
+rows are not assigned guessed owners: they remain readable through the legacy trusted
+API but fail closed and are invisible through scoped reads. New agent, task, job,
+policy, artifact, objective, watch, trigger, and attention events propagate trusted
+owner identity when their source context has it.
 
 `SQLitePersistence` also implements the durable workflow stores. The standalone
 `SQLiteIdempotencyStore` persists the existing tool receipt contract and may share

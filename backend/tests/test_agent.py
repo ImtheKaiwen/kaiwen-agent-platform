@@ -131,6 +131,7 @@ def test_model_usage_is_accumulated_and_emitted() -> None:
 
 def test_agent_preserves_trusted_identity_in_effective_context() -> None:
     captured: AgentContext | None = None
+    events = InMemoryEventSink()
 
     @tool(
         name="context.inspect",
@@ -162,6 +163,7 @@ def test_agent_preserves_trusted_identity_in_effective_context() -> None:
         ),
         tools=[inspect_context],
         permissions={"context.read"},
+        event_sink=events,
     )
     asyncio.run(
         agent.run(
@@ -184,6 +186,8 @@ def test_agent_preserves_trusted_identity_in_effective_context() -> None:
     assert captured.conversation_id == "conversation_1"
     assert captured.client_id == "client_1"
     assert captured.environment == "production"
+    assert all(event.tenant_id == "tenant_1" for event in events.events)
+    assert all(event.user_id == "user_1" for event in events.events)
 
 
 def test_provider_continuation_state_is_isolated_across_concurrent_runs() -> None:

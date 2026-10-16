@@ -22,6 +22,10 @@ The backend is the decision authority. Browser actions are semantic, allowlisted
 validated, and report a structured result. Arbitrary JavaScript or DOM selectors are
 not part of the protocol.
 
+Durable event ownership is explicit when a trusted runtime context provides it.
+User-facing event reads require tenant, user, and session scope together; a session ID
+alone is only a backward-compatible internal replay key and is not authorization.
+
 ## Text provider boundary
 
 The core calls a small `ModelProvider` protocol. Opaque provider state remains local

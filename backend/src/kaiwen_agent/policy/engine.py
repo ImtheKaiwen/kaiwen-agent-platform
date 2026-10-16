@@ -122,6 +122,8 @@ class PolicyEngine:
                     type=_EVENT_TYPES[decision.decision],
                     trace_id=context.trace_id,
                     session_id=context.session_id,
+                    tenant_id=context.tenant_id,
+                    user_id=context.user_id,
                     payload=payload,
                 )
             )

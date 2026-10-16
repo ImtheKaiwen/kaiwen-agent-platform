@@ -86,6 +86,8 @@ class ArtifactManager:
                         type="artifact.created",
                         trace_id=context.trace_id,
                         session_id=context.session_id,
+                        tenant_id=context.tenant_id,
+                        user_id=context.user_id,
                         payload={
                             "artifact_id": metadata.id,
                             "tenant_id": metadata.tenant_id,

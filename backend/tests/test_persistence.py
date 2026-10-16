@@ -1,8 +1,9 @@
 import asyncio
+import sqlite3
 
 from kaiwen_agent.audit import AuditRecord, RedactingAuditStore
 from kaiwen_agent.control import RunControl, TaskCheckpoint
-from kaiwen_agent.events import AgentEvent
+from kaiwen_agent.events import AgentEvent, EventScope
 from kaiwen_agent.persistence.sqlite import SQLitePersistence
 from kaiwen_agent.realtime import ConversationMessage, ConversationModality, ConversationRole
 from kaiwen_agent.sessions import SessionRecord
@@ -76,6 +77,92 @@ def test_sqlite_events_redact_payload_mutated_after_validation(tmp_path) -> None
 
         stored = await store.list_events(session_id="session_1")
         assert stored[0].payload == {"api_key": "[REDACTED]"}
+
+    asyncio.run(scenario())
+
+
+def test_sqlite_scoped_events_fail_closed_across_owner_boundaries(tmp_path) -> None:
+    async def scenario() -> None:
+        store = SQLitePersistence(tmp_path / "scoped-events.sqlite3")
+        first = AgentEvent(
+            id="evt_owner_1",
+            type="run.started",
+            trace_id="trace_1",
+            session_id="shared-session",
+            tenant_id="tenant_1",
+            user_id="user_1",
+        )
+        second = first.model_copy(
+            update={
+                "id": "evt_owner_2",
+                "tenant_id": "tenant_2",
+                "user_id": "user_2",
+            }
+        )
+        legacy = first.model_copy(
+            update={"id": "evt_legacy", "tenant_id": None, "user_id": None}
+        )
+        for event in (first, second, legacy):
+            await store.append(event)
+
+        owned = await store.list_events_scoped(
+            scope=EventScope(
+                tenant_id="tenant_1",
+                user_id="user_1",
+                session_id="shared-session",
+            )
+        )
+        assert [event.id for event in owned] == ["evt_owner_1"]
+        assert (
+            await store.list_events_scoped(
+                scope=EventScope(
+                    tenant_id="tenant_1",
+                    user_id="user_1",
+                    session_id="shared-session",
+                ),
+                after_id="evt_owner_2",
+            )
+            == []
+        )
+
+    asyncio.run(scenario())
+
+
+def test_existing_sqlite_event_table_migrates_without_claiming_legacy_ownership(
+    tmp_path,
+) -> None:
+    database = tmp_path / "legacy-events.sqlite3"
+    with sqlite3.connect(database) as connection:
+        connection.execute(
+            """CREATE TABLE events (
+                sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+                id TEXT NOT NULL UNIQUE, type TEXT NOT NULL, timestamp TEXT NOT NULL,
+                trace_id TEXT NOT NULL, session_id TEXT NOT NULL, payload_json TEXT NOT NULL
+            )"""
+        )
+        connection.execute(
+            """INSERT INTO events
+                (id, type, timestamp, trace_id, session_id, payload_json)
+            VALUES ('evt_legacy', 'run.started', '2026-01-01T00:00:00+00:00',
+                    'trace_1', 'session_1', '{}')"""
+        )
+
+    async def scenario() -> None:
+        store = SQLitePersistence(database)
+        legacy = await store.list_events(session_id="session_1")
+        assert len(legacy) == 1
+        assert legacy[0].tenant_id is None
+        assert legacy[0].user_id is None
+        assert (
+            await store.list_events_scoped(
+                scope=EventScope(
+                    tenant_id="tenant_1",
+                    user_id="user_1",
+                    session_id="session_1",
+                )
+            )
+            == []
+        )
 
     asyncio.run(scenario())
 

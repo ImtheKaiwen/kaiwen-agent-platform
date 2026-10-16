@@ -238,6 +238,8 @@ class TaskScheduler:
                 type=event_type,
                 trace_id=task.trace_id,
                 session_id=task.session_id,
+                tenant_id=task.tenant_id,
+                user_id=task.user_id,
                 payload={"task_id": task.id, **payload},
             )
         )

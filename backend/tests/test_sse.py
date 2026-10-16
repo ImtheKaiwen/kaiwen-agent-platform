@@ -1,7 +1,7 @@
 import asyncio
 import json
 
-from kaiwen_agent.events import AgentEvent, InMemoryEventSink
+from kaiwen_agent.events import AgentEvent, EventScope, InMemoryEventSink
 from kaiwen_agent.transports.sse import SSEEventBroker, encode_sse
 
 
@@ -50,5 +50,32 @@ def test_sse_broker_persists_and_fans_out_by_session() -> None:
         await stream.aclose()
         assert "event: run.started" in encoded
         assert [event.id for event in sink.events] == ["evt_1"]
+
+    asyncio.run(scenario())
+
+
+def test_in_memory_event_reads_require_exact_owner_scope() -> None:
+    async def scenario() -> None:
+        sink = InMemoryEventSink()
+        for tenant_id, user_id in (("tenant_1", "user_1"), ("tenant_2", "user_2")):
+            await sink.append(
+                AgentEvent(
+                    type="run.started",
+                    trace_id=f"trace:{tenant_id}",
+                    session_id="shared-session",
+                    tenant_id=tenant_id,
+                    user_id=user_id,
+                )
+            )
+        owned = await sink.list_events_scoped(
+            scope=EventScope(
+                tenant_id="tenant_1",
+                user_id="user_1",
+                session_id="shared-session",
+            )
+        )
+        assert [(event.tenant_id, event.user_id) for event in owned] == [
+            ("tenant_1", "user_1")
+        ]
 
     asyncio.run(scenario())

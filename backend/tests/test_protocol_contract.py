@@ -17,6 +17,8 @@ def test_python_accepts_canonical_valid_event_fixture() -> None:
     event = AgentEvent.model_validate(read_fixture("event.valid.json"))
     assert event.schema_version == "1.0"
     assert event.type == "run.started"
+    assert event.tenant_id == "tenant_fixture"
+    assert event.user_id == "user_fixture"
 
 
 def test_python_rejects_canonical_invalid_event_fixture() -> None:

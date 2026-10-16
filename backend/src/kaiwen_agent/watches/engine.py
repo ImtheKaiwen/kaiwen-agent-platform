@@ -216,6 +216,8 @@ class WatchEngine:
                 type=event_type,
                 trace_id=trace_id,
                 session_id=watch.conversation_id or f"watch:{watch.user_id}",
+                tenant_id=watch.tenant_id,
+                user_id=watch.user_id,
                 payload={
                     "watch_id": watch.id,
                     "status": watch.status.value,

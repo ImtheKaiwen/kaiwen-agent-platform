@@ -150,6 +150,8 @@ export interface AgentEvent<TPayload extends Record<string, unknown> = Record<st
   timestamp: string;
   trace_id: string;
   session_id: string;
+  tenant_id?: string | null;
+  user_id?: string | null;
   payload: TPayload;
 }
 

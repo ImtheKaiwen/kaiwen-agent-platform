@@ -77,6 +77,8 @@ class AttentionEngine:
                 type="attention.created",
                 trace_id=context.trace_id,
                 session_id=context.conversation_id or f"attention:{context.user_id}",
+                tenant_id=context.tenant_id,
+                user_id=context.user_id,
                 payload={
                     "attention_id": item.id,
                     "severity": item.severity.value,

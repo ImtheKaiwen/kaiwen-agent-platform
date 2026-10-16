@@ -202,6 +202,11 @@ register or invoke an undeclared tool. Concurrent-run regression coverage also
 proves provider continuation state remains local to each run. Remaining crash,
 multitenant, failover, and load matrices are still required.
 
+Durable event ownership now travels as backward-compatible optional protocol fields.
+The new scoped store path requires an exact tenant/user/session tuple; legacy
+session-only reads remain for trusted internal replay, while migrated historical rows
+with unknown ownership are never surfaced through the scoped path.
+
 ## Non-goals
 
 - No product routes, prompts, branding, authentication, or domain tools.

@@ -54,7 +54,7 @@ class Agent:
         )
         run = AgentRun(session_id=context.session_id, status="running")
         await self.run_store.save(run)
-        await self._emit("run.started", run, trace_id, {"agent": self.name})
+        await self._emit("run.started", run, trace_id, {"agent": self.name}, effective_context)
         tool_results: list[ToolResult] = []
         pending_tool_results: list[ToolResult] = []
         provider_state: object | None = None
@@ -84,6 +84,7 @@ class Agent:
                             "model": response.model or "unknown",
                             **response.usage.model_dump(),
                         },
+                        effective_context,
                     )
                 if not response.tool_calls:
                     result = AgentResult(
@@ -99,7 +100,11 @@ class Agent:
                     run.completed_at = datetime.now(UTC)
                     await self.run_store.save(run)
                     await self._emit(
-                        "run.completed", run, trace_id, {"step": step, "text": result.text}
+                        "run.completed",
+                        run,
+                        trace_id,
+                        {"step": step, "text": result.text},
+                        effective_context,
                     )
                     return result
 
@@ -111,7 +116,7 @@ class Agent:
                         effective_context,
                         execution_scope=run.id,
                         emit=lambda event_type, payload: self._emit(
-                            event_type, run, trace_id, payload
+                            event_type, run, trace_id, payload, effective_context
                         ),
                     )
                     tool_results.append(tool_result)
@@ -122,7 +127,13 @@ class Agent:
             run.status = "failed"
             run.completed_at = datetime.now(UTC)
             await self.run_store.save(run)
-            await self._emit("run.failed", run, trace_id, {"error_type": type(error).__name__})
+            await self._emit(
+                "run.failed",
+                run,
+                trace_id,
+                {"error_type": type(error).__name__},
+                effective_context,
+            )
             raise
 
     async def _emit(
@@ -131,12 +142,15 @@ class Agent:
         run: AgentRun,
         trace_id: str,
         payload: dict[str, object],
+        context: AgentContext,
     ) -> None:
         await self.event_sink.append(
             AgentEvent(
                 type=event_type,
                 trace_id=trace_id,
                 session_id=run.session_id,
+                tenant_id=context.tenant_id,
+                user_id=context.user_id,
                 payload=payload,
             )
         )

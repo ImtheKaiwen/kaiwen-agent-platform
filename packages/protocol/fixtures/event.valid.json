@@ -5,6 +5,8 @@
   "timestamp": "2026-09-17T20:00:00Z",
   "trace_id": "trace_fixture",
   "session_id": "session_fixture",
+  "tenant_id": "tenant_fixture",
+  "user_id": "user_fixture",
   "payload": {
     "agent": "fixture-agent"
   }

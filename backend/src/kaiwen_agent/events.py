@@ -93,6 +93,8 @@ class AgentEvent(BaseModel):
     timestamp: datetime = Field(default_factory=utc_now)
     trace_id: str
     session_id: str
+    tenant_id: str | None = Field(default=None, min_length=1, max_length=200)
+    user_id: str | None = Field(default=None, min_length=1, max_length=200)
     payload: dict[str, Any] = Field(default_factory=dict)
 
     @field_validator("payload", mode="after")
@@ -123,6 +125,24 @@ class EventStore(EventSink, Protocol):
     ) -> list[AgentEvent]: ...
 
 
+class EventScope(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    tenant_id: str = Field(min_length=1, max_length=200)
+    user_id: str = Field(min_length=1, max_length=200)
+    session_id: str = Field(min_length=1, max_length=200)
+
+
+class ScopedEventStore(EventStore, Protocol):
+    async def list_events_scoped(
+        self,
+        *,
+        scope: EventScope,
+        after_id: str | None = None,
+        limit: int = 100,
+    ) -> list[AgentEvent]: ...
+
+
 class InMemoryEventSink:
     def __init__(self) -> None:
         self.events: list[AgentEvent] = []
@@ -138,6 +158,28 @@ class InMemoryEventSink:
         limit: int = 100,
     ) -> list[AgentEvent]:
         events = [event for event in self.events if event.session_id == session_id]
+        if after_id is not None:
+            index = next(
+                (index for index, event in enumerate(events) if event.id == after_id),
+                len(events),
+            )
+            events = events[index + 1 :]
+        return [event.model_copy(deep=True) for event in events[:limit]]
+
+    async def list_events_scoped(
+        self,
+        *,
+        scope: EventScope,
+        after_id: str | None = None,
+        limit: int = 100,
+    ) -> list[AgentEvent]:
+        events = [
+            event
+            for event in self.events
+            if event.session_id == scope.session_id
+            and event.tenant_id == scope.tenant_id
+            and event.user_id == scope.user_id
+        ]
         if after_id is not None:
             index = next(
                 (index for index, event in enumerate(events) if event.id == after_id),

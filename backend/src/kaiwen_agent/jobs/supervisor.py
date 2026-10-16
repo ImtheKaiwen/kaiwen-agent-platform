@@ -142,6 +142,8 @@ class JobSupervisor:
                 type=event_type,
                 trace_id=job.trace_id,
                 session_id=job.session_id,
+                tenant_id=job.tenant_id,
+                user_id=job.user_id,
                 payload={
                     "job_id": job.id,
                     "task_id": job.task_id,

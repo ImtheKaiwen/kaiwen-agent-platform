@@ -15,6 +15,8 @@ test("event schema keeps protocol version pinned", async () => {
   const schema = JSON.parse(source);
   assert.equal(schema.properties.schema_version.const, "1.0");
   assert.ok(schema.properties.type.enum.includes("client_action.requested"));
+  assert.deepEqual(schema.properties.tenant_id.type, ["string", "null"]);
+  assert.deepEqual(schema.properties.user_id.type, ["string", "null"]);
   assert.equal(schema.additionalProperties, false);
 });
 

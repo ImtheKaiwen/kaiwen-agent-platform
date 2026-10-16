@@ -123,7 +123,8 @@ implementation status for the reusable packages.
 - [x] Phase U10 security foundation: durable event payload redaction at validation,
       built-in persistence/stream defense in depth, and an MCP prompt-injection
       regression proving that untrusted output cannot expand the registered toolset,
-      plus concurrent-run provider continuation isolation.
+      concurrent-run provider continuation isolation, and exact owner-scoped event
+      reads with fail-closed legacy migration.
 - [ ] Phase U10 hardening: optional document and specialized adapters, the remaining
       crash/multitenant/failover/load matrices, and expanded developer documentation.
 

@@ -152,6 +152,8 @@ class ObjectiveManager:
                 type=event_type,
                 trace_id=context.trace_id,
                 session_id=context.conversation_id or f"objective:{context.user_id}",
+                tenant_id=context.tenant_id,
+                user_id=context.user_id,
                 payload={
                     "objective_id": objective.id,
                     "status": objective.status.value,

@@ -137,6 +137,8 @@ class TriggerRouter:
                     type="trigger.wakeup.scheduled",
                     trace_id=wakeup.id,
                     session_id=f"lifecycle:{batch.agent_id}",
+                    tenant_id=batch.tenant_id,
+                    user_id=batch.user_id,
                     payload={
                         "rule_id": batch.rule_id,
                         "event_count": len(batch.event_ids),
@@ -158,6 +160,8 @@ class TriggerRouter:
                 type=event_type,
                 trace_id=event.id,
                 session_id=event.conversation_id or f"trigger:{event.tenant_id or 'global'}",
+                tenant_id=event.tenant_id,
+                user_id=event.user_id,
                 payload={
                     "trigger_event_id": event.id,
                     "event_type": event.type,

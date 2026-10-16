@@ -10,7 +10,7 @@ from typing import TypeVar
 
 from kaiwen_agent.audit import AuditRecord
 from kaiwen_agent.control.checkpoints import TaskCheckpoint
-from kaiwen_agent.events import AgentEvent, redact_agent_event
+from kaiwen_agent.events import AgentEvent, EventScope, redact_agent_event
 from kaiwen_agent.jobs.models import TERMINAL_JOB_STATUSES, AgentJob, JobStatus
 from kaiwen_agent.lifecycle.models import (
     LifecycleCycle,
@@ -141,14 +141,17 @@ class SQLitePersistence:
         def operation(connection: sqlite3.Connection) -> None:
             connection.execute(
                 """INSERT INTO events
-                    (id, type, timestamp, trace_id, session_id, payload_json)
-                VALUES (?, ?, ?, ?, ?, ?)""",
+                    (id, type, timestamp, trace_id, session_id,
+                     tenant_id, user_id, payload_json)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
                     event.id,
                     event.type,
                     event.timestamp.isoformat(),
                     event.trace_id,
                     event.session_id,
+                    event.tenant_id,
+                    event.user_id,
                     json.dumps(event.payload, ensure_ascii=False, default=str),
                 ),
             )
@@ -177,7 +180,8 @@ class SQLitePersistence:
                     return []
                 after_sequence = int(cursor["sequence"])
             rows = connection.execute(
-                """SELECT id, type, timestamp, trace_id, session_id, payload_json
+                """SELECT id, type, timestamp, trace_id, session_id,
+                    tenant_id, user_id, payload_json
                 FROM events WHERE session_id = ? AND sequence > ?
                 ORDER BY sequence ASC LIMIT ?""",
                 (session_id, after_sequence, limit),
@@ -189,6 +193,55 @@ class SQLitePersistence:
                     timestamp=row["timestamp"],
                     trace_id=row["trace_id"],
                     session_id=row["session_id"],
+                    tenant_id=row["tenant_id"],
+                    user_id=row["user_id"],
+                    payload=json.loads(row["payload_json"]),
+                )
+                for row in rows
+            ]
+
+        return await self._run(operation)
+
+    async def list_events_scoped(
+        self,
+        *,
+        scope: EventScope,
+        after_id: str | None = None,
+        limit: int = 100,
+    ) -> list[AgentEvent]:
+        if not 1 <= limit <= 1000:
+            raise ValueError("limit must be between 1 and 1000")
+        await self.initialize()
+
+        def operation(connection: sqlite3.Connection) -> list[AgentEvent]:
+            parameters = (scope.session_id, scope.tenant_id, scope.user_id)
+            after_sequence = 0
+            if after_id is not None:
+                cursor = connection.execute(
+                    """SELECT sequence FROM events
+                    WHERE id = ? AND session_id = ? AND tenant_id = ? AND user_id = ?""",
+                    (after_id, *parameters),
+                ).fetchone()
+                if cursor is None:
+                    return []
+                after_sequence = int(cursor["sequence"])
+            rows = connection.execute(
+                """SELECT id, type, timestamp, trace_id, session_id,
+                    tenant_id, user_id, payload_json
+                FROM events
+                WHERE session_id = ? AND tenant_id = ? AND user_id = ? AND sequence > ?
+                ORDER BY sequence ASC LIMIT ?""",
+                (*parameters, after_sequence, limit),
+            ).fetchall()
+            return [
+                AgentEvent(
+                    id=row["id"],
+                    type=row["type"],
+                    timestamp=row["timestamp"],
+                    trace_id=row["trace_id"],
+                    session_id=row["session_id"],
+                    tenant_id=row["tenant_id"],
+                    user_id=row["user_id"],
                     payload=json.loads(row["payload_json"]),
                 )
                 for row in rows
@@ -1384,7 +1437,8 @@ class SQLitePersistence:
             CREATE TABLE IF NOT EXISTS events (
                 sequence INTEGER PRIMARY KEY AUTOINCREMENT,
                 id TEXT NOT NULL UNIQUE, type TEXT NOT NULL, timestamp TEXT NOT NULL,
-                trace_id TEXT NOT NULL, session_id TEXT NOT NULL, payload_json TEXT NOT NULL
+                trace_id TEXT NOT NULL, session_id TEXT NOT NULL,
+                tenant_id TEXT, user_id TEXT, payload_json TEXT NOT NULL
             );
             CREATE INDEX IF NOT EXISTS idx_events_session_sequence
                 ON events(session_id, sequence);
@@ -1487,6 +1541,17 @@ class SQLitePersistence:
             CREATE INDEX IF NOT EXISTS idx_durable_approvals_owner_status
                 ON durable_approvals(tenant_id, user_id, status, updated_at);
             """
+        )
+        event_columns = {
+            row["name"] for row in connection.execute("PRAGMA table_info(events)").fetchall()
+        }
+        if "tenant_id" not in event_columns:
+            connection.execute("ALTER TABLE events ADD COLUMN tenant_id TEXT")
+        if "user_id" not in event_columns:
+            connection.execute("ALTER TABLE events ADD COLUMN user_id TEXT")
+        connection.execute(
+            """CREATE INDEX IF NOT EXISTS idx_events_owner_session_sequence
+            ON events(tenant_id, user_id, session_id, sequence)"""
         )
 
 
