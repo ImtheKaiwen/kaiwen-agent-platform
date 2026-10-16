@@ -32,6 +32,8 @@
   optional Gemini/Ollama adapters with centrally executed tool proposals.
 - Add provider-neutral speech recognition, synthesis, transcript, and ephemeral
   pipeline contracts with explicit audio-processing permission and deterministic fakes.
+- Add bounded workspace filesystem tools and trusted MCP tool bindings that preserve
+  central permissions, approvals, side-effect classification, and execution policy.
 
 ## 0.4.0a1 — 2026-09-24
 

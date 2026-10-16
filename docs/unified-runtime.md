@@ -174,6 +174,15 @@ STT, text handling, and TTS, and never persists raw audio. Native realtime speec
 continues to use the separate Realtime Core. Heavy engines and ecosystem adapters
 remain optional follow-up work.
 
+Ecosystem foundation implemented: the optional workspace filesystem adapter accepts
+only host-configured roots and a trusted workspace binding, canonicalizes every path,
+blocks traversal and symlink escape, separates read/write permissions, bounds bytes,
+and requires approval for writes. MCP tools become executable only through a trusted
+host binding whose schema exactly matches the discovered descriptor; permissions,
+side-effect classification, approval, idempotency, audit, and execution remain in the
+central `ToolExecutor`. Discovery alone grants no authority. General shell execution,
+delete operations, browser engines, documents, CI, and domain tools are not included.
+
 ### U10 — Hardening and DX
 
 Complete crash, multitenant, prompt-injection, failover, pressure, budget, and cold

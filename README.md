@@ -45,6 +45,8 @@ then run:
 Current implementation status is tracked in [`docs/roadmap.md`](docs/roadmap.md).
 The dependency-ordered, single-agent-first composition roadmap is documented in
 [`docs/unified-runtime.md`](docs/unified-runtime.md).
+Bounded workspace filesystem tools and trusted MCP bindings are documented in
+[`docs/ecosystem-integrations.md`](docs/ecosystem-integrations.md).
 Persistence and event delivery are documented in
 [`docs/persistence.md`](docs/persistence.md).
 Bounded context, short-term summaries, and policy-gated long-term memory are
@@ -76,4 +78,4 @@ Release registry setup and the protected publishing workflow are documented in
 - Applications own domain tools and authorization context.
 - Every event uses a versioned envelope.
 - Tool access is deny-by-default and checked by the runtime.
-- Side-effecting tools will gain approval and idempotency middleware before release.
+- Side-effecting tools use the central approval, idempotency, policy, and audit pipeline.

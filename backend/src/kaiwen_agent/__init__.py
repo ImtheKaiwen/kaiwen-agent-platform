@@ -49,6 +49,17 @@ from kaiwen_agent.coordination import (
 from kaiwen_agent.dead_letter import DeadLetterManager
 from kaiwen_agent.evaluation import EvaluationRunner, EvaluationSuite
 from kaiwen_agent.health import HeartbeatMonitor
+from kaiwen_agent.integrations import (
+    MCPClient,
+    MCPToolBinding,
+    MCPToolDescriptor,
+    WorkspaceFilesystem,
+    WorkspacePathError,
+    WorkspaceReadInput,
+    WorkspaceWriteInput,
+    bind_mcp_tool,
+    workspace_tools,
+)
 from kaiwen_agent.jobs import (
     AgentJob,
     AgentJobRef,
@@ -322,6 +333,9 @@ __all__ = [
     "MetricName",
     "MetricRecord",
     "MetricsSink",
+    "MCPClient",
+    "MCPToolBinding",
+    "MCPToolDescriptor",
     "ModelProvider",
     "ModelProviderFactory",
     "ModelComplexity",
@@ -425,6 +439,10 @@ __all__ = [
     "Verifier",
     "VerifierRegistry",
     "WorkspaceProfile",
+    "WorkspaceFilesystem",
+    "WorkspacePathError",
+    "WorkspaceReadInput",
+    "WorkspaceWriteInput",
     "WorkloadKind",
     "SchedulerFactory",
     "WorkflowCompiler",
@@ -440,5 +458,7 @@ __all__ = [
     "WorkflowRevisionRequest",
     "WorkflowTaskFailure",
     "WorkflowTaskSpec",
+    "bind_mcp_tool",
     "tool",
+    "workspace_tools",
 ]
