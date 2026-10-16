@@ -120,6 +120,15 @@ Add structured plan validation and compilation into the existing `TaskGraph`, th
 bounded controller that advances through execute, verify, repair, replan, blocked, or
 terminal decisions. Side-effecting autonomy is available only after U5.
 
+Implemented: untrusted structured plans are constrained by owner identity, worker,
+capability, resource, graph, size, and strict-JSON validation before compilation into
+the existing `TaskGraph`. `WorkflowController` delegates all execution to
+`TaskScheduler`, holds the resolved standards fixed, requires `CompletionGate`
+evidence before completion, and bounds repair/replan cycles with stagnation detection.
+Unexpected scheduler or completion-gate failures terminally fail the durable run.
+`AgentRuntime.run()` remains fail-closed for `workflow`; hosts compose the structured
+workflow controller explicitly until a stable model-planning input contract exists.
+
 ### U7 — Optional teams
 
 Compose lead and child runtime instances through the existing jobs and delegation

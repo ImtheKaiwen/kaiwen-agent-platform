@@ -24,6 +24,8 @@
 - Add owner-scoped durable workflow records with immutable configuration pins,
   restart-safe action intents, one-time approvals, SQLite idempotency receipts, safe
   lifecycle controls, and lease-guarded uncertain-action recovery.
+- Add validated single-agent workflow plans compiled into the existing Task Runtime,
+  with owner isolation, evidence-backed completion, and finite repair/replan control.
 
 ## 0.4.0a1 — 2026-09-24
 

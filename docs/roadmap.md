@@ -105,7 +105,7 @@ implementation status for the reusable packages.
 - [x] Phase U5: owner-scoped durable runtime state and immutable pins, stable action
       intents, restart-safe one-time approvals and receipts, safe lifecycle controls,
       and lease-guarded reconciliation that blocks uncertain external effects.
-- [ ] Phase U6: bounded autonomous single-agent workflows compiled to the existing
+- [x] Phase U6: bounded autonomous single-agent workflows compiled to the existing
       Task Runtime, with evidence gates and finite repair/replan decisions.
 - [ ] Phase U7-U10: optional teams, Gemini/Ollama capabilities and adapters, speech
       ports, security/load hardening, examples, and developer documentation.

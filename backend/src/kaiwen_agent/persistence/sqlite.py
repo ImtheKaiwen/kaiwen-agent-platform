@@ -1501,6 +1501,7 @@ def _validate_runtime_run_transition(
         RuntimeRunStatus.CREATED: {
             RuntimeRunStatus.CREATED,
             RuntimeRunStatus.RUNNING,
+            RuntimeRunStatus.FAILED,
             RuntimeRunStatus.CANCELLED,
         },
         RuntimeRunStatus.RUNNING: {
@@ -1515,6 +1516,7 @@ def _validate_runtime_run_transition(
             RuntimeRunStatus.PAUSED,
             RuntimeRunStatus.RUNNING,
             RuntimeRunStatus.BLOCKED,
+            RuntimeRunStatus.FAILED,
             RuntimeRunStatus.CANCELLED,
         },
         RuntimeRunStatus.BLOCKED: {

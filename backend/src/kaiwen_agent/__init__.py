@@ -176,6 +176,22 @@ from kaiwen_agent.tools.results import (
 )
 from kaiwen_agent.triggers import TriggerEvent, TriggerRouter, TriggerRule
 from kaiwen_agent.watches import WatchEngine, WatchStrategy
+from kaiwen_agent.workflow import (
+    SchedulerFactory,
+    WorkflowCompiler,
+    WorkflowController,
+    WorkflowLimits,
+    WorkflowOutcome,
+    WorkflowOutcomeStatus,
+    WorkflowPlan,
+    WorkflowPlanError,
+    WorkflowRetryPolicy,
+    WorkflowRevisionPlanner,
+    WorkflowRevisionReason,
+    WorkflowRevisionRequest,
+    WorkflowTaskFailure,
+    WorkflowTaskSpec,
+)
 
 __all__ = [
     "Agent",
@@ -345,5 +361,19 @@ __all__ = [
     "VerifierRegistry",
     "WorkspaceProfile",
     "WorkloadKind",
+    "SchedulerFactory",
+    "WorkflowCompiler",
+    "WorkflowController",
+    "WorkflowLimits",
+    "WorkflowOutcome",
+    "WorkflowOutcomeStatus",
+    "WorkflowPlan",
+    "WorkflowPlanError",
+    "WorkflowRetryPolicy",
+    "WorkflowRevisionPlanner",
+    "WorkflowRevisionReason",
+    "WorkflowRevisionRequest",
+    "WorkflowTaskFailure",
+    "WorkflowTaskSpec",
     "tool",
 ]

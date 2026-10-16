@@ -50,7 +50,13 @@ class DurableRunManager:
         return await self._transition(
             run_id=run_id,
             identity=identity,
-            expected=frozenset({RuntimeRunStatus.CREATED, RuntimeRunStatus.PAUSED}),
+            expected=frozenset(
+                {
+                    RuntimeRunStatus.CREATED,
+                    RuntimeRunStatus.PAUSED,
+                    RuntimeRunStatus.BLOCKED,
+                }
+            ),
             status=RuntimeRunStatus.RUNNING,
         )
 
@@ -104,6 +110,25 @@ class DurableRunManager:
             identity=identity,
             expected=frozenset({RuntimeRunStatus.RUNNING}),
             status=RuntimeRunStatus.COMPLETED,
+            terminal=True,
+        )
+
+    async def fail(
+        self, *, run_id: str, identity: RuntimeIdentity, reason: str
+    ) -> RuntimeRunRecord:
+        return await self._transition(
+            run_id=run_id,
+            identity=identity,
+            expected=frozenset(
+                {
+                    RuntimeRunStatus.CREATED,
+                    RuntimeRunStatus.RUNNING,
+                    RuntimeRunStatus.PAUSED,
+                    RuntimeRunStatus.BLOCKED,
+                }
+            ),
+            status=RuntimeRunStatus.FAILED,
+            blocked_reason=reason,
             terminal=True,
         )
 
