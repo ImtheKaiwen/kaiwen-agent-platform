@@ -37,6 +37,8 @@
 - Add credential-free runtime and speech quickstarts that execute in CI.
 - Redact canonical durable event payloads at validation and built-in persistence or
   streaming boundaries, with an MCP toolset-escalation injection regression.
+- Add a deterministic concurrent-run regression proving provider continuation state
+  remains local to each agent run.
 
 ## 0.4.0a1 — 2026-09-24
 

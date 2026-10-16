@@ -198,8 +198,9 @@ Security foundation implemented: canonical durable event payloads redact credent
 keys and recognizable secret values at validation, while built-in memory, SQLite,
 realtime, and SSE boundaries sanitize again before persistence or delivery. A
 provider-free MCP injection regression verifies that untrusted tool output cannot
-register or invoke an undeclared tool. Remaining crash, multitenant, failover, and
-load matrices are still required.
+register or invoke an undeclared tool. Concurrent-run regression coverage also
+proves provider continuation state remains local to each run. Remaining crash,
+multitenant, failover, and load matrices are still required.
 
 ## Non-goals
 

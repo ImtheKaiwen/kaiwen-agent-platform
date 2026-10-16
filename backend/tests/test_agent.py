@@ -1,4 +1,6 @@
 import asyncio
+from collections.abc import Sequence
+from typing import Any
 
 import pytest
 from pydantic import BaseModel
@@ -7,7 +9,14 @@ from kaiwen_agent import Agent, AgentContext, tool
 from kaiwen_agent.events import InMemoryEventSink
 from kaiwen_agent.exceptions import PermissionDeniedError
 from kaiwen_agent.models.fake import FakeModelProvider
-from kaiwen_agent.types import AgentInput, ModelResponse, ModelUsage, ToolCall
+from kaiwen_agent.tools.definition import ToolDefinition
+from kaiwen_agent.types import (
+    AgentInput,
+    ModelResponse,
+    ModelUsage,
+    ToolCall,
+    ToolResult,
+)
 
 
 class GreetingInput(BaseModel):
@@ -175,3 +184,74 @@ def test_agent_preserves_trusted_identity_in_effective_context() -> None:
     assert captured.conversation_id == "conversation_1"
     assert captured.client_id == "client_1"
     assert captured.environment == "production"
+
+
+def test_provider_continuation_state_is_isolated_across_concurrent_runs() -> None:
+    class ConcurrentProvider:
+        def __init__(self) -> None:
+            self.started: set[str] = set()
+            self.ready = asyncio.Event()
+            self.seen_continuations: dict[str, object | None] = {}
+
+        async def respond(
+            self,
+            agent_input: AgentInput,
+            *,
+            context: AgentContext,
+            tools: Sequence[ToolDefinition],
+            tool_results: Sequence[ToolResult],
+            provider_state: Any | None,
+        ) -> ModelResponse:
+            del agent_input, tools
+            session_id = context.session_id
+            if not tool_results:
+                self.started.add(session_id)
+                if len(self.started) == 2:
+                    self.ready.set()
+                await asyncio.wait_for(self.ready.wait(), timeout=1)
+                return ModelResponse(
+                    tool_calls=[
+                        ToolCall(
+                            id=f"call-{session_id}",
+                            name="greeting.create",
+                            arguments={"name": session_id},
+                        )
+                    ],
+                    provider_state={"session_id": session_id},
+                )
+            self.seen_continuations[session_id] = provider_state
+            if provider_state != {"session_id": session_id}:
+                raise RuntimeError("Provider state crossed run boundaries")
+            return ModelResponse(text=f"completed:{session_id}")
+
+    async def scenario() -> None:
+        provider = ConcurrentProvider()
+        agent = Agent(
+            name="concurrent-agent",
+            model=provider,
+            tools=[create_greeting],
+            permissions={"greeting.read"},
+        )
+        first, second = await asyncio.gather(
+            agent.run(
+                AgentInput(text="first"),
+                context=AgentContext(
+                    session_id="session_1",
+                    permissions=frozenset({"greeting.read"}),
+                ),
+            ),
+            agent.run(
+                AgentInput(text="second"),
+                context=AgentContext(
+                    session_id="session_2",
+                    permissions=frozenset({"greeting.read"}),
+                ),
+            ),
+        )
+        assert {first.text, second.text} == {"completed:session_1", "completed:session_2"}
+        assert provider.seen_continuations == {
+            "session_1": {"session_id": "session_1"},
+            "session_2": {"session_id": "session_2"},
+        }
+
+    asyncio.run(scenario())
