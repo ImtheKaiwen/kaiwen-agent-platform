@@ -118,8 +118,9 @@ implementation status for the reusable packages.
       fake adapters. Heavy speech engines and ecosystem tools remain optional.
 - [x] Phase U9 ecosystem foundation: host-bounded workspace filesystem tools and
       trusted MCP bindings that route through the central tool safety pipeline.
-- [x] Phase U10 DX foundation: credential-free simple-runtime and speech examples
-      whose imports and execution are continuously verified by CI.
+- [x] Phase U10 DX foundation: credential-free simple-runtime, bounded autonomous
+      single-agent, least-privilege team, and speech examples whose imports and
+      execution are continuously verified by CI.
 - [x] Phase U10 security foundation: durable event payload redaction at validation,
       built-in persistence/stream defense in depth, and an MCP prompt-injection
       regression proving that untrusted output cannot expand the registered toolset,

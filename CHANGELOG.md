@@ -43,6 +43,8 @@
   reads, including a fail-closed SQLite migration for historical unowned events.
 - Add policy-approved initial-call model failover with locality revalidation, explicit
   transient-error classification, and strict provider continuation affinity.
+- Add CI-verified, credential-free autonomous workflow and least-privilege team
+  quickstarts.
 
 ## 0.4.0a1 — 2026-09-24
 

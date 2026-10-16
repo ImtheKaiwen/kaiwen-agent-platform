@@ -20,9 +20,13 @@ jobs:
       - run: python -m ruff check .
       - run: python -m mypy src/kaiwen_agent
       - run: python -m mypy ../examples/simple-runtime/main.py
+      - run: python -m mypy ../examples/autonomous-single-agent/main.py
+      - run: python -m mypy ../examples/software-agent-team/main.py
       - run: python -m mypy ../examples/speech-pipeline/main.py
       - run: python -m pytest
       - run: python ../examples/simple-runtime/main.py
+      - run: python ../examples/autonomous-single-agent/main.py
+      - run: python ../examples/software-agent-team/main.py
       - run: python ../examples/speech-pipeline/main.py
 
   node:

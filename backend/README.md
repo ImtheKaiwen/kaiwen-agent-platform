@@ -104,7 +104,10 @@ remain authoritative; configuration never grants additional access.
 The smallest credential-free runtime example is
 [`examples/simple-runtime`](../examples/simple-runtime). The provider-neutral fake
 speech composition is in [`examples/speech-pipeline`](../examples/speech-pipeline).
-Both are executed by CI so their public imports stay valid.
+Durable single-agent workflow and least-privilege team composition are demonstrated
+in [`examples/autonomous-single-agent`](../examples/autonomous-single-agent) and
+[`examples/software-agent-team`](../examples/software-agent-team). All four are
+executed by CI so their public imports stay valid.
 
 Applications may inject `ContextBuilder`, `ContextWindow`, and
 `ContextCompactionManager` into the runtime. Context collection stays optional for
