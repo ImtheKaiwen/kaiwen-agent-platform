@@ -100,6 +100,12 @@ lossy session summaries as policy or configuration. Use
 `ArtifactToolResultProcessor` when large tool output should be stored out-of-band and
 represented to the model by an owner-scoped artifact reference.
 
+Runtime delivery requirements use immutable `StandardsPack` definitions and
+host-registered verifiers. `CompletionGate` accepts a mandatory requirement only when
+its artifact evidence is owned by the trusted user, belongs to the current run, and
+matches both the protected input fingerprint and declared evidence type. The package
+does not include product-specific test, legal, citation, or CI verifiers.
+
 `OPENAI_API_KEY` is read by the OpenAI SDK from the server environment. The
 runtime never stores it and it must never be exposed to browser code.
 

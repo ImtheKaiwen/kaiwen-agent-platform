@@ -99,6 +99,11 @@ summarizes only canonical conversation records and cannot become an authority so
 Large tool results are replaced in model context with owner-scoped artifact references
 through an executor decorator, without changing the established `Agent` loop.
 
+Standards are immutable requirement declarations, not authorization or workflow code.
+Runtime quality gates use host-registered verifiers and owner/run/input-scoped artifact
+evidence. Missing verifiers, stale evidence, and unresolved mandatory conditions are
+inconclusive and block completion. Offline evaluation remains a separate subsystem.
+
 ## Evaluation and production controls
 
 Evaluation targets are injected and suites remain declarative. Replay consumes

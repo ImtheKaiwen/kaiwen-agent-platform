@@ -23,6 +23,7 @@ from kaiwen_agent.prompts import PromptDefinition, PromptRegistry
 from kaiwen_agent.runtime.agent_runtime import AgentRuntime
 from kaiwen_agent.runtime.profile import RuntimeVersionPins, WorkspaceProfile
 from kaiwen_agent.sessions import RunStore
+from kaiwen_agent.standards import StandardsPack, StandardsRegistry
 from kaiwen_agent.tools.definition import ToolDefinition
 from kaiwen_agent.tools.execution import ToolExecutor
 from kaiwen_agent.tools.registry import ToolRegistry
@@ -40,6 +41,7 @@ class ConfiguredAgentRuntime:
     profile: WorkspaceProfile
     prompt: PromptDefinition
     capability_manifest: CapabilityManifest
+    standards_packs: tuple[StandardsPack, ...]
     pins: RuntimeVersionPins
 
 
@@ -54,6 +56,7 @@ class AgentFactory:
         capabilities: CapabilityRegistry,
         providers: ProviderRegistry,
         tools: ToolRegistry,
+        standards: StandardsRegistry | None = None,
         event_sink: EventSink | None = None,
         run_store: RunStore | None = None,
         tool_executor: ToolExecutor | None = None,
@@ -69,6 +72,7 @@ class AgentFactory:
         self.capabilities = capabilities
         self.providers = providers
         self.tools = tools
+        self.standards = standards
         self.event_sink = event_sink
         self.run_store = run_store
         self.tool_executor = tool_executor
@@ -91,6 +95,7 @@ class AgentFactory:
         prompt = self._resolve_prompt(definition)
         manifest = self._resolve_manifest(definition)
         selected_tools = self._resolve_tools(profile, definition)
+        standards_packs = self._resolve_standards(profile)
         if definition.provider_ref not in profile.provider_allowlist:
             raise RuntimeCompositionError(
                 f"Provider is not allowed by workspace profile: {definition.provider_ref}"
@@ -130,8 +135,21 @@ class AgentFactory:
             profile=profile,
             prompt=prompt,
             capability_manifest=manifest,
+            standards_packs=standards_packs,
             pins=pins,
         )
+
+    def _resolve_standards(self, profile: WorkspaceProfile) -> tuple[StandardsPack, ...]:
+        if not profile.standards_pack_refs:
+            return ()
+        if self.standards is None:
+            raise RuntimeCompositionError("Workspace standards require a StandardsRegistry")
+        try:
+            return tuple(
+                self.standards.resolve(reference) for reference in profile.standards_pack_refs
+            )
+        except KeyError as error:
+            raise RuntimeCompositionError(str(error)) from error
 
     def _context_window_with_prompt(self, prompt: PromptDefinition) -> ContextWindow | None:
         if self.context_window is None or self.context_builder is None:
@@ -237,4 +255,7 @@ class AgentFactory:
             provider_ref=definition.provider_ref,
             tool_names=tuple(tool.name for tool in tools),
             toolset_checksum=RuntimeVersionPins.toolset_hash(tool_records),
+            standards_pack_refs=tuple(
+                f"{reference.id}@{reference.version}" for reference in profile.standards_pack_refs
+            ),
         )

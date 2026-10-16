@@ -19,6 +19,8 @@
   fail-fast composition validation, and exact runtime configuration pins.
 - Add optional bounded runtime context composition, provider-aware token counters,
   provenance-checked rolling compaction, and owner-scoped tool-output offloading.
+- Add versioned standards packs, deterministic requirement resolution, host verifier
+  registration, evidence-backed completion gates, and bounded repair tracking.
 
 ## 0.4.0a1 — 2026-09-24
 

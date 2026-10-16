@@ -23,6 +23,12 @@ from kaiwen_agent.runtime import (
     RuntimeIdentity,
     WorkspaceProfile,
 )
+from kaiwen_agent.standards import (
+    RequirementDefinition,
+    RequirementObligation,
+    StandardsPack,
+    StandardsRegistry,
+)
 from kaiwen_agent.tools.definition import ToolDefinition
 from kaiwen_agent.tools.registry import ToolRegistry
 from kaiwen_agent.types import AgentInput, ModelResponse, ToolCall, ToolResult
@@ -297,3 +303,40 @@ def test_provider_registry_requires_explicit_unique_registration() -> None:
         providers.register("fake", CapturingProvider)
     with pytest.raises(KeyError, match="Unknown provider"):
         providers.create("missing", instructions="safe")
+
+
+def test_workspace_standards_are_exactly_resolved_and_pinned() -> None:
+    factory, profile, _ = composition()
+    standards_profile = profile.model_copy(update={"standards_pack_refs": (ref("quality"),)})
+    with pytest.raises(RuntimeCompositionError, match="StandardsRegistry"):
+        factory.create(standards_profile)
+
+    standards = StandardsRegistry(
+        [
+            StandardsPack(
+                id="quality",
+                version=1,
+                requirements=(
+                    RequirementDefinition(
+                        id="tests",
+                        description="Tests pass",
+                        obligation=RequirementObligation.MUST,
+                        acceptance_criteria=("exit code is zero",),
+                        verifier_ref="tests.verify",
+                        evidence_types=frozenset({"test_report"}),
+                    ),
+                ),
+            )
+        ]
+    )
+    with_standards = AgentFactory(
+        agents=factory.agents,
+        prompts=factory.prompts,
+        capabilities=factory.capabilities,
+        providers=factory.providers,
+        tools=factory.tools,
+        standards=standards,
+    )
+    configured = with_standards.create(standards_profile)
+    assert configured.standards_packs[0].id == "quality"
+    assert configured.pins.standards_pack_refs == ("quality@1",)

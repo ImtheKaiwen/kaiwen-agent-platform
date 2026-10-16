@@ -111,6 +111,19 @@ from kaiwen_agent.policy import (
     SchedulingPolicy,
 )
 from kaiwen_agent.prompts import PromptDefinition, PromptRegistry, PromptRunRecord
+from kaiwen_agent.quality import (
+    CompletionGate,
+    CompletionGateResult,
+    CompletionGateStatus,
+    RepairDecision,
+    RepairLimits,
+    RepairTracker,
+    VerificationContext,
+    VerificationResult,
+    VerificationStatus,
+    Verifier,
+    VerifierRegistry,
+)
 from kaiwen_agent.replay import ReplayPlayer, ReplayRecorder, SimulationSideEffectPolicy
 from kaiwen_agent.runtime import (
     AgentFactory,
@@ -127,6 +140,16 @@ from kaiwen_agent.runtime import (
 )
 from kaiwen_agent.secrets import EnvironmentSecretProvider, SecretProvider, SecretValue
 from kaiwen_agent.skills import SkillDefinition, SkillRegistry, SkillStep
+from kaiwen_agent.standards import (
+    RequirementDefinition,
+    RequirementObligation,
+    RequirementSeverity,
+    ResolvedRequirement,
+    StandardResolution,
+    StandardsPack,
+    StandardsRegistry,
+    StandardsResolver,
+)
 from kaiwen_agent.tools.approval import ApprovalGate, ApprovalRequest
 from kaiwen_agent.tools.decorator import tool
 from kaiwen_agent.tools.definition import RetryPolicy
@@ -178,6 +201,9 @@ __all__ = [
     "CompactionRequest",
     "CompactionResult",
     "CompactionStatus",
+    "CompletionGate",
+    "CompletionGateResult",
+    "CompletionGateStatus",
     "ContextBudget",
     "ContextBuildRequest",
     "ContextBuilder",
@@ -239,6 +265,13 @@ __all__ = [
     "ReplayPlayer",
     "ReplayRecorder",
     "RedisLeaseStore",
+    "RepairDecision",
+    "RepairLimits",
+    "RepairTracker",
+    "RequirementDefinition",
+    "RequirementObligation",
+    "RequirementSeverity",
+    "ResolvedRequirement",
     "RetryPolicy",
     "RuntimePolicy",
     "RuntimeMetrics",
@@ -257,6 +290,10 @@ __all__ = [
     "SkillDefinition",
     "SkillRegistry",
     "SkillStep",
+    "StandardResolution",
+    "StandardsPack",
+    "StandardsRegistry",
+    "StandardsResolver",
     "SubagentDelegator",
     "SummaryGenerator",
     "TextJobBridge",
@@ -274,6 +311,11 @@ __all__ = [
     "WatchEngine",
     "WatchStrategy",
     "VersionedReference",
+    "VerificationContext",
+    "VerificationResult",
+    "VerificationStatus",
+    "Verifier",
+    "VerifierRegistry",
     "WorkspaceProfile",
     "WorkloadKind",
     "tool",

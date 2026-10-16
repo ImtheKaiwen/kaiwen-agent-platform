@@ -100,8 +100,10 @@ implementation status for the reusable packages.
       fail-fast capability validation, and exact in-run version pins.
 - [x] Phase U3: optional runtime context integration, provider-aware token accounting,
       structured rolling compaction, and owner-scoped large tool-output offloading.
-- [ ] Phase U4-U6: standards and evidence gates, durable runtime state/recovery, then
-      bounded autonomous single-agent workflows compiled to the existing Task Runtime.
+- [x] Phase U4: versioned standards resolution, verifier registration, owner-scoped
+      evidence gates, and bounded repair/stagnation models.
+- [ ] Phase U5-U6: durable runtime state/recovery, then bounded autonomous single-agent
+      workflows compiled to the existing Task Runtime.
 - [ ] Phase U7-U10: optional teams, Gemini/Ollama capabilities and adapters, speech
       ports, security/load hardening, examples, and developer documentation.
 

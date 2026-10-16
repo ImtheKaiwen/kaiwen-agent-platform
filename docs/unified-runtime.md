@@ -91,6 +91,12 @@ Add versioned standards, deterministic requirement resolution, verifier registra
 owner-scoped evidence, completion gates, and bounded stagnation-aware repair models.
 No domain-specific verifier implementation belongs in core.
 
+Implemented: immutable standards packs and deterministic condition/conflict
+resolution remain separate from prompts, policy, and skills. Host verifiers return
+structured results; completion gates validate owner/run/fingerprint/type-scoped
+artifact evidence and fail inconclusive when a mandatory verifier or evidence is
+missing. Repair/replan/stagnation tracking is bounded and does not execute work.
+
 ### U5 — Durable run state and recovery
 
 Add an owner-scoped `RuntimeRunStore`, SQLite reference persistence, version pins,

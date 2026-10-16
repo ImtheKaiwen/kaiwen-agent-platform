@@ -20,6 +20,7 @@ class WorkspaceProfile(BaseModel):
     default_agent_ref: VersionedReference
     provider_allowlist: frozenset[str] = Field(min_length=1)
     tool_allowlist: frozenset[str] = Field(default_factory=frozenset)
+    standards_pack_refs: tuple[VersionedReference, ...] = ()
     default_autonomy: AutonomyLevel = AutonomyLevel.SUPERVISED
 
     @model_validator(mode="after")
@@ -30,6 +31,11 @@ class WorkspaceProfile(BaseModel):
         default_key = (self.default_agent_ref.id, self.default_agent_ref.version)
         if default_key not in set(keys):
             raise ValueError("default_agent_ref must be present in agent_refs")
+        standard_keys = [
+            (reference.id, reference.version) for reference in self.standards_pack_refs
+        ]
+        if len(standard_keys) != len(set(standard_keys)):
+            raise ValueError("standards_pack_refs must not contain duplicates")
         return self
 
 
@@ -50,6 +56,7 @@ class RuntimeVersionPins(BaseModel):
     provider_ref: str
     tool_names: tuple[str, ...]
     toolset_checksum: str
+    standards_pack_refs: tuple[str, ...] = ()
 
     @classmethod
     def toolset_hash(cls, records: list[dict[str, Any]]) -> str:
