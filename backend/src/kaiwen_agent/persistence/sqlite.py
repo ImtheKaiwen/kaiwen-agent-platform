@@ -20,15 +20,24 @@ from kaiwen_agent.lifecycle.models import (
 )
 from kaiwen_agent.memory.models import SessionSummary
 from kaiwen_agent.realtime.conversation import ConversationMessage
+from kaiwen_agent.runtime.durability import RuntimeRunRecord, RuntimeRunStatus
 from kaiwen_agent.sessions import SessionRecord
 from kaiwen_agent.tasks.models import AgentTask, TaskStatus
-from kaiwen_agent.types import AgentRun, utc_now
+from kaiwen_agent.tools.durability import (
+    ActionIntentRecord,
+    ActionIntentStatus,
+    ApprovalStatus,
+    DurableApprovalRecord,
+)
+from kaiwen_agent.types import AgentRun, ToolResult, utc_now
 
 T = TypeVar("T")
 
 
 class SQLitePersistence:
     """Dependency-free SQLite reference adapter for local and small deployments."""
+
+    is_durable = True
 
     def __init__(self, path: str | Path) -> None:
         self.path = Path(path)
@@ -963,6 +972,376 @@ class SQLitePersistence:
 
         return await self._run(operation)
 
+    async def save_runtime_run(self, run: RuntimeRunRecord) -> None:
+        await self.initialize()
+
+        def operation(connection: sqlite3.Connection) -> None:
+            connection.execute("BEGIN IMMEDIATE")
+            row = connection.execute(
+                "SELECT run_json FROM runtime_runs WHERE id = ?", (run.id,)
+            ).fetchone()
+            if row is not None:
+                current = RuntimeRunRecord.model_validate_json(row["run_json"])
+                if (
+                    current.tenant_id,
+                    current.user_id,
+                    current.session_id,
+                    current.conversation_id,
+                    current.mode,
+                    current.autonomy,
+                    current.version_pins,
+                ) != (
+                    run.tenant_id,
+                    run.user_id,
+                    run.session_id,
+                    run.conversation_id,
+                    run.mode,
+                    run.autonomy,
+                    run.version_pins,
+                ):
+                    raise ValueError("Runtime run identity and version pins are immutable")
+                _validate_runtime_run_transition(current.status, run.status)
+            connection.execute(
+                """INSERT INTO runtime_runs
+                    (id, tenant_id, user_id, status, run_json, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?)
+                ON CONFLICT(id) DO UPDATE SET
+                    status = excluded.status,
+                    run_json = excluded.run_json,
+                    updated_at = excluded.updated_at""",
+                (
+                    run.id,
+                    run.tenant_id,
+                    run.user_id,
+                    run.status,
+                    run.model_dump_json(),
+                    run.updated_at.isoformat(),
+                ),
+            )
+
+        await self._run(operation)
+
+    async def get_runtime_run(
+        self, *, run_id: str, tenant_id: str, user_id: str
+    ) -> RuntimeRunRecord | None:
+        await self.initialize()
+
+        def operation(connection: sqlite3.Connection) -> RuntimeRunRecord | None:
+            row = connection.execute(
+                """SELECT run_json FROM runtime_runs
+                WHERE id = ? AND tenant_id = ? AND user_id = ?""",
+                (run_id, tenant_id, user_id),
+            ).fetchone()
+            return RuntimeRunRecord.model_validate_json(row["run_json"]) if row else None
+
+        return await self._run(operation)
+
+    async def list_runtime_runs(
+        self, *, statuses: frozenset[RuntimeRunStatus], limit: int = 100
+    ) -> list[RuntimeRunRecord]:
+        _validate_runtime_limit(limit)
+        if not statuses:
+            return []
+        await self.initialize()
+
+        def operation(connection: sqlite3.Connection) -> list[RuntimeRunRecord]:
+            placeholders = ",".join("?" for _ in statuses)
+            rows = connection.execute(
+                f"""SELECT run_json FROM runtime_runs
+                WHERE status IN ({placeholders}) ORDER BY updated_at ASC LIMIT ?""",
+                [*(str(status) for status in statuses), limit],
+            ).fetchall()
+            return [RuntimeRunRecord.model_validate_json(row["run_json"]) for row in rows]
+
+        return await self._run(operation)
+
+    async def prepare_action_intent(self, intent: ActionIntentRecord) -> ActionIntentRecord:
+        await self.initialize()
+
+        def operation(connection: sqlite3.Connection) -> ActionIntentRecord:
+            connection.execute("BEGIN IMMEDIATE")
+            connection.execute(
+                """INSERT OR IGNORE INTO action_intents
+                    (id, runtime_run_id, tenant_id, user_id, status,
+                     idempotency_key, intent_json, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    intent.id,
+                    intent.runtime_run_id,
+                    intent.tenant_id,
+                    intent.user_id,
+                    intent.status,
+                    intent.idempotency_key,
+                    intent.model_dump_json(),
+                    intent.updated_at.isoformat(),
+                ),
+            )
+            row = connection.execute(
+                "SELECT intent_json FROM action_intents WHERE id = ?", (intent.id,)
+            ).fetchone()
+            if row is None:
+                row = connection.execute(
+                    """SELECT intent_json FROM action_intents
+                    WHERE tenant_id = ? AND user_id = ? AND runtime_run_id = ?
+                        AND idempotency_key = ?""",
+                    (
+                        intent.tenant_id,
+                        intent.user_id,
+                        intent.runtime_run_id,
+                        intent.idempotency_key,
+                    ),
+                ).fetchone()
+            if row is None:
+                raise RuntimeError("Action intent could not be persisted")
+            stored = ActionIntentRecord.model_validate_json(row["intent_json"])
+            _validate_action_binding(stored, intent)
+            return stored
+
+        return await self._run(operation)
+
+    async def get_action_intent(
+        self, *, intent_id: str, tenant_id: str, user_id: str
+    ) -> ActionIntentRecord | None:
+        await self.initialize()
+
+        def operation(connection: sqlite3.Connection) -> ActionIntentRecord | None:
+            row = connection.execute(
+                """SELECT intent_json FROM action_intents
+                WHERE id = ? AND tenant_id = ? AND user_id = ?""",
+                (intent_id, tenant_id, user_id),
+            ).fetchone()
+            return ActionIntentRecord.model_validate_json(row["intent_json"]) if row else None
+
+        return await self._run(operation)
+
+    async def transition_action_intent(
+        self,
+        *,
+        intent_id: str,
+        tenant_id: str,
+        user_id: str,
+        expected: frozenset[ActionIntentStatus],
+        status: ActionIntentStatus,
+        result: ToolResult | None = None,
+        error_code: str | None = None,
+        external_receipt: dict[str, object] | None = None,
+    ) -> ActionIntentRecord | None:
+        _validate_action_transition_request(expected, status)
+        await self.initialize()
+
+        def operation(connection: sqlite3.Connection) -> ActionIntentRecord | None:
+            connection.execute("BEGIN IMMEDIATE")
+            row = connection.execute(
+                """SELECT intent_json FROM action_intents
+                WHERE id = ? AND tenant_id = ? AND user_id = ?""",
+                (intent_id, tenant_id, user_id),
+            ).fetchone()
+            if row is None:
+                return None
+            current = ActionIntentRecord.model_validate_json(row["intent_json"])
+            if current.status not in expected:
+                return None
+            updated = current.model_copy(
+                update={
+                    "status": status,
+                    "result": result,
+                    "error_code": error_code,
+                    "external_receipt": external_receipt or {},
+                    "updated_at": utc_now(),
+                }
+            )
+            changed = connection.execute(
+                """UPDATE action_intents SET status = ?, intent_json = ?, updated_at = ?
+                WHERE id = ? AND tenant_id = ? AND user_id = ? AND status = ?""",
+                (
+                    status,
+                    updated.model_dump_json(),
+                    updated.updated_at.isoformat(),
+                    intent_id,
+                    tenant_id,
+                    user_id,
+                    current.status,
+                ),
+            )
+            return updated if changed.rowcount == 1 else None
+
+        return await self._run(operation)
+
+    async def list_action_intents(
+        self, *, statuses: frozenset[ActionIntentStatus], limit: int = 100
+    ) -> list[ActionIntentRecord]:
+        _validate_runtime_limit(limit)
+        if not statuses:
+            return []
+        await self.initialize()
+
+        def operation(connection: sqlite3.Connection) -> list[ActionIntentRecord]:
+            placeholders = ",".join("?" for _ in statuses)
+            rows = connection.execute(
+                f"""SELECT intent_json FROM action_intents
+                WHERE status IN ({placeholders}) ORDER BY updated_at ASC LIMIT ?""",
+                [*(str(status) for status in statuses), limit],
+            ).fetchall()
+            return [ActionIntentRecord.model_validate_json(row["intent_json"]) for row in rows]
+
+        return await self._run(operation)
+
+    async def create_pending_approval(
+        self, approval: DurableApprovalRecord
+    ) -> DurableApprovalRecord:
+        await self.initialize()
+
+        def operation(connection: sqlite3.Connection) -> DurableApprovalRecord:
+            connection.execute("BEGIN IMMEDIATE")
+            connection.execute(
+                """INSERT OR IGNORE INTO durable_approvals
+                    (id, action_intent_id, tenant_id, user_id, status,
+                     approval_json, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    approval.id,
+                    approval.action_intent_id,
+                    approval.tenant_id,
+                    approval.user_id,
+                    approval.status,
+                    approval.model_dump_json(),
+                    approval.updated_at.isoformat(),
+                ),
+            )
+            row = connection.execute(
+                """SELECT approval_json FROM durable_approvals
+                WHERE action_intent_id = ? AND tenant_id = ? AND user_id = ?""",
+                (approval.action_intent_id, approval.tenant_id, approval.user_id),
+            ).fetchone()
+            assert row is not None
+            stored = DurableApprovalRecord.model_validate_json(row["approval_json"])
+            _validate_approval_binding(stored, approval)
+            return stored
+
+        return await self._run(operation)
+
+    async def get_approval(
+        self, *, approval_id: str, tenant_id: str, user_id: str
+    ) -> DurableApprovalRecord | None:
+        await self.initialize()
+
+        def operation(connection: sqlite3.Connection) -> DurableApprovalRecord | None:
+            row = connection.execute(
+                """SELECT approval_json FROM durable_approvals
+                WHERE id = ? AND tenant_id = ? AND user_id = ?""",
+                (approval_id, tenant_id, user_id),
+            ).fetchone()
+            return DurableApprovalRecord.model_validate_json(row["approval_json"]) if row else None
+
+        return await self._run(operation)
+
+    async def get_approval_for_intent(
+        self, *, action_intent_id: str, tenant_id: str, user_id: str
+    ) -> DurableApprovalRecord | None:
+        await self.initialize()
+
+        def operation(connection: sqlite3.Connection) -> DurableApprovalRecord | None:
+            row = connection.execute(
+                """SELECT approval_json FROM durable_approvals
+                WHERE action_intent_id = ? AND tenant_id = ? AND user_id = ?""",
+                (action_intent_id, tenant_id, user_id),
+            ).fetchone()
+            return DurableApprovalRecord.model_validate_json(row["approval_json"]) if row else None
+
+        return await self._run(operation)
+
+    async def resolve_approval(
+        self,
+        *,
+        approval_id: str,
+        tenant_id: str,
+        user_id: str,
+        conversation_id: str | None,
+        action_intent_id: str,
+        tool_name: str,
+        call_id: str,
+        decided_by: str,
+        approved: bool,
+    ) -> DurableApprovalRecord | None:
+        target = ApprovalStatus.APPROVED if approved else ApprovalStatus.DENIED
+        return await self._transition_approval(
+            approval_id=approval_id,
+            tenant_id=tenant_id,
+            user_id=user_id,
+            expected=ApprovalStatus.PENDING,
+            status=target,
+            decided_by=decided_by,
+            expected_binding=(conversation_id, action_intent_id, tool_name, call_id),
+        )
+
+    async def consume_approval(
+        self, *, approval_id: str, tenant_id: str, user_id: str
+    ) -> DurableApprovalRecord | None:
+        return await self._transition_approval(
+            approval_id=approval_id,
+            tenant_id=tenant_id,
+            user_id=user_id,
+            expected=ApprovalStatus.APPROVED,
+            status=ApprovalStatus.CONSUMED,
+            decided_by=None,
+            expected_binding=None,
+        )
+
+    async def _transition_approval(
+        self,
+        *,
+        approval_id: str,
+        tenant_id: str,
+        user_id: str,
+        expected: ApprovalStatus,
+        status: ApprovalStatus,
+        decided_by: str | None,
+        expected_binding: tuple[str | None, str, str, str] | None,
+    ) -> DurableApprovalRecord | None:
+        await self.initialize()
+
+        def operation(connection: sqlite3.Connection) -> DurableApprovalRecord | None:
+            connection.execute("BEGIN IMMEDIATE")
+            row = connection.execute(
+                """SELECT approval_json FROM durable_approvals
+                WHERE id = ? AND tenant_id = ? AND user_id = ? AND status = ?""",
+                (approval_id, tenant_id, user_id, expected),
+            ).fetchone()
+            if row is None:
+                return None
+            current = DurableApprovalRecord.model_validate_json(row["approval_json"])
+            if expected_binding is not None and (
+                current.conversation_id,
+                current.action_intent_id,
+                current.tool_name,
+                current.call_id,
+            ) != expected_binding:
+                return None
+            now = utc_now()
+            updates: dict[str, object] = {"status": status, "updated_at": now}
+            if status in {ApprovalStatus.APPROVED, ApprovalStatus.DENIED}:
+                updates.update({"decided_by": decided_by, "decided_at": now})
+            if status == ApprovalStatus.CONSUMED:
+                updates["consumed_at"] = now
+            updated = current.model_copy(update=updates)
+            changed = connection.execute(
+                """UPDATE durable_approvals
+                SET status = ?, approval_json = ?, updated_at = ?
+                WHERE id = ? AND tenant_id = ? AND user_id = ? AND status = ?""",
+                (
+                    status,
+                    updated.model_dump_json(),
+                    now.isoformat(),
+                    approval_id,
+                    tenant_id,
+                    user_id,
+                    expected,
+                ),
+            )
+            return updated if changed.rowcount == 1 else None
+
+        return await self._run(operation)
+
     @staticmethod
     def _validate_lifecycle_limit(limit: int) -> None:
         if not 1 <= limit <= 1000:
@@ -1078,5 +1457,133 @@ class SQLitePersistence:
                 ON agent_jobs(status, priority DESC, updated_at);
             CREATE INDEX IF NOT EXISTS idx_agent_jobs_parent
                 ON agent_jobs(parent_job_id, updated_at);
+            CREATE TABLE IF NOT EXISTS runtime_runs (
+                id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, user_id TEXT NOT NULL,
+                status TEXT NOT NULL, run_json TEXT NOT NULL, updated_at TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_runtime_runs_status_updated
+                ON runtime_runs(status, updated_at);
+            CREATE INDEX IF NOT EXISTS idx_runtime_runs_owner_updated
+                ON runtime_runs(tenant_id, user_id, updated_at DESC);
+            CREATE TABLE IF NOT EXISTS action_intents (
+                id TEXT PRIMARY KEY, runtime_run_id TEXT NOT NULL,
+                tenant_id TEXT NOT NULL, user_id TEXT NOT NULL,
+                status TEXT NOT NULL, idempotency_key TEXT NOT NULL,
+                intent_json TEXT NOT NULL, updated_at TEXT NOT NULL,
+                UNIQUE(tenant_id, user_id, runtime_run_id, idempotency_key)
+            );
+            CREATE INDEX IF NOT EXISTS idx_action_intents_status_updated
+                ON action_intents(status, updated_at);
+            CREATE INDEX IF NOT EXISTS idx_action_intents_run
+                ON action_intents(runtime_run_id, updated_at);
+            CREATE TABLE IF NOT EXISTS durable_approvals (
+                id TEXT PRIMARY KEY, action_intent_id TEXT NOT NULL,
+                tenant_id TEXT NOT NULL, user_id TEXT NOT NULL,
+                status TEXT NOT NULL, approval_json TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                UNIQUE(action_intent_id, tenant_id, user_id)
+            );
+            CREATE INDEX IF NOT EXISTS idx_durable_approvals_owner_status
+                ON durable_approvals(tenant_id, user_id, status, updated_at);
             """
         )
+
+
+def _validate_runtime_limit(limit: int) -> None:
+    if not 1 <= limit <= 1000:
+        raise ValueError("limit must be between 1 and 1000")
+
+
+def _validate_runtime_run_transition(
+    current: RuntimeRunStatus, target: RuntimeRunStatus
+) -> None:
+    allowed = {
+        RuntimeRunStatus.CREATED: {
+            RuntimeRunStatus.CREATED,
+            RuntimeRunStatus.RUNNING,
+            RuntimeRunStatus.CANCELLED,
+        },
+        RuntimeRunStatus.RUNNING: {
+            RuntimeRunStatus.RUNNING,
+            RuntimeRunStatus.PAUSED,
+            RuntimeRunStatus.BLOCKED,
+            RuntimeRunStatus.COMPLETED,
+            RuntimeRunStatus.FAILED,
+            RuntimeRunStatus.CANCELLED,
+        },
+        RuntimeRunStatus.PAUSED: {
+            RuntimeRunStatus.PAUSED,
+            RuntimeRunStatus.RUNNING,
+            RuntimeRunStatus.BLOCKED,
+            RuntimeRunStatus.CANCELLED,
+        },
+        RuntimeRunStatus.BLOCKED: {
+            RuntimeRunStatus.BLOCKED,
+            RuntimeRunStatus.RUNNING,
+            RuntimeRunStatus.CANCELLED,
+            RuntimeRunStatus.FAILED,
+        },
+        RuntimeRunStatus.COMPLETED: {RuntimeRunStatus.COMPLETED},
+        RuntimeRunStatus.FAILED: {RuntimeRunStatus.FAILED},
+        RuntimeRunStatus.CANCELLED: {RuntimeRunStatus.CANCELLED},
+    }
+    if target not in allowed[current]:
+        raise ValueError(f"Invalid runtime run transition: {current} -> {target}")
+
+
+def _validate_action_binding(stored: ActionIntentRecord, requested: ActionIntentRecord) -> None:
+    immutable_fields = (
+        "runtime_run_id",
+        "tenant_id",
+        "user_id",
+        "conversation_id",
+        "tool_name",
+        "call_id",
+        "arguments_checksum",
+        "idempotency_key",
+        "side_effect",
+    )
+    if any(getattr(stored, field) != getattr(requested, field) for field in immutable_fields):
+        raise ValueError("Action intent identity was reused with a different binding")
+
+
+def _validate_action_transition_request(
+    expected: frozenset[ActionIntentStatus], target: ActionIntentStatus
+) -> None:
+    if not expected:
+        raise ValueError("expected action states must not be empty")
+    allowed = {
+        ActionIntentStatus.PREPARED: {
+            ActionIntentStatus.EXECUTING,
+            ActionIntentStatus.CANCELLED,
+        },
+        ActionIntentStatus.EXECUTING: {
+            ActionIntentStatus.SUCCEEDED,
+            ActionIntentStatus.FAILED,
+            ActionIntentStatus.UNCERTAIN,
+        },
+        ActionIntentStatus.UNCERTAIN: {
+            ActionIntentStatus.SUCCEEDED,
+            ActionIntentStatus.FAILED,
+            ActionIntentStatus.CANCELLED,
+        },
+    }
+    if any(target not in allowed.get(current, set()) for current in expected):
+        raise ValueError(f"Invalid action transition to {target} from {sorted(expected)}")
+
+
+def _validate_approval_binding(
+    stored: DurableApprovalRecord, requested: DurableApprovalRecord
+) -> None:
+    immutable_fields = (
+        "action_intent_id",
+        "runtime_run_id",
+        "tenant_id",
+        "user_id",
+        "conversation_id",
+        "tool_name",
+        "call_id",
+        "arguments_checksum",
+    )
+    if any(getattr(stored, field) != getattr(requested, field) for field in immutable_fields):
+        raise ValueError("Approval identity was reused with a different binding")

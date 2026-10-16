@@ -126,15 +126,28 @@ from kaiwen_agent.quality import (
 )
 from kaiwen_agent.replay import ReplayPlayer, ReplayRecorder, SimulationSideEffectPolicy
 from kaiwen_agent.runtime import (
+    ActionIntentRecord,
+    ActionIntentStatus,
+    ActionIntentStore,
     AgentFactory,
     AgentRuntime,
     AutonomyLevel,
     ConfiguredAgentRuntime,
     ContextWindowExceededError,
+    DurableApprovalRecord,
+    DurableApprovalStore,
+    DurableRunManager,
+    DurableRuntimeStores,
+    RecoveryReport,
     RunMode,
     RuntimeCompositionError,
     RuntimeIdentity,
     RuntimeModeUnavailableError,
+    RuntimeRecoveryError,
+    RuntimeRecoveryManager,
+    RuntimeRunRecord,
+    RuntimeRunStatus,
+    RuntimeRunStore,
     RuntimeVersionPins,
     WorkspaceProfile,
 )
@@ -150,7 +163,7 @@ from kaiwen_agent.standards import (
     StandardsRegistry,
     StandardsResolver,
 )
-from kaiwen_agent.tools.approval import ApprovalGate, ApprovalRequest
+from kaiwen_agent.tools.approval import ApprovalGate, ApprovalRequest, DurableApprovalGate
 from kaiwen_agent.tools.decorator import tool
 from kaiwen_agent.tools.definition import RetryPolicy
 from kaiwen_agent.tools.execution import ToolExecutor
@@ -166,6 +179,9 @@ from kaiwen_agent.watches import WatchEngine, WatchStrategy
 
 __all__ = [
     "Agent",
+    "ActionIntentRecord",
+    "ActionIntentStatus",
+    "ActionIntentStore",
     "AgentContext",
     "AgentDefinition",
     "AgentDefinitionRegistry",
@@ -184,6 +200,7 @@ __all__ = [
     "AutonomyLevel",
     "ApprovalGate",
     "ApprovalRequest",
+    "DurableApprovalGate",
     "BackpressureController",
     "BackpressureLimits",
     "BudgetContext",
@@ -211,6 +228,10 @@ __all__ = [
     "ContextRenderer",
     "ContextWindow",
     "ContextWindowExceededError",
+    "DurableApprovalRecord",
+    "DurableApprovalStore",
+    "DurableRunManager",
+    "DurableRuntimeStores",
     "ConfiguredAgentRuntime",
     "DeadLetterManager",
     "DelegationPolicy",
@@ -271,6 +292,7 @@ __all__ = [
     "RequirementDefinition",
     "RequirementObligation",
     "RequirementSeverity",
+    "RecoveryReport",
     "ResolvedRequirement",
     "RetryPolicy",
     "RuntimePolicy",
@@ -279,6 +301,11 @@ __all__ = [
     "RuntimeCompositionError",
     "RuntimeIdentity",
     "RuntimeModeUnavailableError",
+    "RuntimeRecoveryError",
+    "RuntimeRecoveryManager",
+    "RuntimeRunRecord",
+    "RuntimeRunStatus",
+    "RuntimeRunStore",
     "RuntimeVersionPins",
     "SchedulerTaskRuntimeAdapter",
     "SchedulingPolicy",

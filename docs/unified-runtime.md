@@ -103,6 +103,17 @@ Add an owner-scoped `RuntimeRunStore`, SQLite reference persistence, version pin
 action intents, durable approvals/idempotency receipts, startup reconciliation, and
 safe pause/resume/cancel. Durable configuration fails closed without durable stores.
 
+Implemented: workflow state is stored separately from the legacy `AgentRun` and pins
+trusted owner identity plus the exact runtime configuration. `DurableRunManager`
+provides owner-scoped safe lifecycle transitions without becoming an executor.
+Side-effecting `ToolExecutor` composition can persist a stable action intent before
+execution, bind a one-time durable approval to the exact owner/conversation/tool/call,
+and reuse a committed receipt after restart. SQLite reference stores cover run state,
+action intents, approvals, and idempotency receipts. Startup reconciliation requires
+an exclusive lease and converts interrupted executing actions to `uncertain`, blocking
+their run instead of retrying an external effect blindly. Workflow execution itself
+remains disabled until U6 compiles plans into the existing Task Runtime.
+
 ### U6 — Autonomous single-agent workflow
 
 Add structured plan validation and compilation into the existing `TaskGraph`, then a

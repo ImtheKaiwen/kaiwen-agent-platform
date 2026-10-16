@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import asyncio
+import json
 from collections.abc import Awaitable, Callable
+from dataclasses import replace
+from hashlib import sha256
 from typing import Any, Literal
 
 from pydantic import ValidationError
@@ -10,6 +13,7 @@ from kaiwen_agent.audit import AuditRecord, AuditStore, RedactingAuditStore, Sec
 from kaiwen_agent.context import AgentContext
 from kaiwen_agent.events import EventType
 from kaiwen_agent.exceptions import (
+    ActionOutcomeUncertainError,
     ApprovalDeniedError,
     ApprovalRequiredError,
     PermissionDeniedError,
@@ -26,6 +30,11 @@ from kaiwen_agent.policy import (
 )
 from kaiwen_agent.tools.approval import ApprovalGate, ApprovalRequest
 from kaiwen_agent.tools.definition import ToolDefinition
+from kaiwen_agent.tools.durability import (
+    ActionIntentRecord,
+    ActionIntentStatus,
+    ActionIntentStore,
+)
 from kaiwen_agent.tools.idempotency import IdempotencyStore, InMemoryIdempotencyStore
 from kaiwen_agent.types import ToolCall, ToolResult
 
@@ -45,6 +54,7 @@ class ToolExecutor:
         audit_store: AuditStore | None = None,
         redactor: SecretRedactor | None = None,
         policy_engine: PolicyEngine | None = None,
+        action_intent_store: ActionIntentStore | None = None,
     ) -> None:
         self.approval_gate = approval_gate
         self.idempotency_store = idempotency_store or InMemoryIdempotencyStore()
@@ -52,6 +62,7 @@ class ToolExecutor:
             RedactingAuditStore(audit_store, redactor) if audit_store is not None else None
         )
         self.policy_engine = policy_engine or PolicyEngine(audit_store=audit_store)
+        self.action_intent_store = action_intent_store
 
     async def execute(
         self,
@@ -130,6 +141,49 @@ class ToolExecutor:
                     f"Policy produced invalid arguments for {definition.name}"
                 ) from error
 
+        arguments_checksum = _arguments_checksum(call.arguments)
+        idempotency_identity = call.idempotency_key or f"{execution_scope}:{call.id}"
+        action_intent = self._action_intent(
+            definition,
+            call,
+            context,
+            execution_scope=execution_scope,
+            arguments_checksum=arguments_checksum,
+            idempotency_identity=idempotency_identity,
+        )
+        action_store = self.action_intent_store
+        if action_intent is not None:
+            assert action_store is not None
+            existing_intent = await action_store.get_action_intent(
+                intent_id=action_intent.id,
+                tenant_id=action_intent.tenant_id,
+                user_id=action_intent.user_id,
+            )
+            if (
+                existing_intent is not None
+                and existing_intent.status == ActionIntentStatus.SUCCEEDED
+            ):
+                if existing_intent.result is None:
+                    raise ActionOutcomeUncertainError(
+                        "Completed action is missing its durable receipt",
+                        action_intent_id=existing_intent.id,
+                    )
+                await emit(
+                    "tool.completed",
+                    {"tool": definition.name, "call_id": call.id, "cached": True},
+                )
+                return existing_intent.result.model_copy(update={"call_id": call.id})
+            if existing_intent is not None and existing_intent.status in {
+                ActionIntentStatus.EXECUTING,
+                ActionIntentStatus.UNCERTAIN,
+            }:
+                raise ActionOutcomeUncertainError(
+                    f"Action outcome is uncertain for tool {definition.name}",
+                    action_intent_id=existing_intent.id,
+                )
+            if existing_intent is None:
+                await action_store.prepare_action_intent(action_intent)
+
         if decision.decision in {
             PolicyDecisionType.REQUIRE_APPROVAL,
             PolicyDecisionType.REVIEW,
@@ -139,6 +193,9 @@ class ToolExecutor:
                 call_id=call.id,
                 arguments=call.arguments,
                 side_effect=definition.side_effect,
+                execution_scope=execution_scope,
+                action_intent_id=action_intent.id if action_intent is not None else None,
+                arguments_checksum=arguments_checksum,
             )
             await emit("approval.requested", {"tool": definition.name, "call_id": call.id})
             if self.approval_gate is None:
@@ -152,6 +209,16 @@ class ToolExecutor:
                 {"tool": definition.name, "call_id": call.id, "approved": approved},
             )
             if not approved:
+                if action_intent is not None:
+                    assert action_store is not None
+                    await action_store.transition_action_intent(
+                        intent_id=action_intent.id,
+                        tenant_id=action_intent.tenant_id,
+                        user_id=action_intent.user_id,
+                        expected=frozenset({ActionIntentStatus.PREPARED}),
+                        status=ActionIntentStatus.CANCELLED,
+                        error_code="approval_denied",
+                    )
                 await self._audit(
                     context, definition, call, "denied", {"reason": "approval_denied"}
                 )
@@ -161,7 +228,8 @@ class ToolExecutor:
         if definition.side_effect != "none" and idempotency_key is None:
             idempotency_key = f"{execution_scope}:{call.id}"
         if idempotency_key is not None:
-            idempotency_key = f"{definition.name}:{idempotency_key}"
+            idempotency_key = _scoped_idempotency_key(context, definition.name, idempotency_key)
+        if idempotency_key is not None and action_intent is None:
             cached = await self.idempotency_store.get(idempotency_key)
             if cached is not None:
                 await self._audit(context, definition, call, "succeeded", {"cached": True})
@@ -170,6 +238,32 @@ class ToolExecutor:
                     {"tool": definition.name, "call_id": call.id, "cached": True},
                 )
                 return cached.model_copy(update={"call_id": call.id})
+
+        if action_intent is not None:
+            assert action_store is not None
+            prepared = await action_store.prepare_action_intent(action_intent)
+            if prepared.status == ActionIntentStatus.SUCCEEDED and prepared.result is not None:
+                return prepared.result.model_copy(update={"call_id": call.id})
+            claimed = await action_store.transition_action_intent(
+                intent_id=prepared.id,
+                tenant_id=prepared.tenant_id,
+                user_id=prepared.user_id,
+                expected=frozenset({ActionIntentStatus.PREPARED}),
+                status=ActionIntentStatus.EXECUTING,
+            )
+            if claimed is None:
+                raise ActionOutcomeUncertainError(
+                    f"Action cannot be claimed safely for tool {definition.name}",
+                    action_intent_id=prepared.id,
+                )
+            context = replace(
+                context,
+                metadata={
+                    **context.metadata,
+                    "action_intent_id": claimed.id,
+                    "idempotency_key": claimed.idempotency_key,
+                },
+            )
 
         await emit("tool.started", {"tool": definition.name, "call_id": call.id})
         last_error: BaseException | None = None
@@ -180,6 +274,21 @@ class ToolExecutor:
                     timeout=definition.timeout_seconds,
                 )
                 result = ToolResult(call_id=call.id, name=definition.name, output=output)
+                if action_intent is not None:
+                    assert action_store is not None
+                    completed = await action_store.transition_action_intent(
+                        intent_id=action_intent.id,
+                        tenant_id=action_intent.tenant_id,
+                        user_id=action_intent.user_id,
+                        expected=frozenset({ActionIntentStatus.EXECUTING}),
+                        status=ActionIntentStatus.SUCCEEDED,
+                        result=result,
+                    )
+                    if completed is None:
+                        raise ActionOutcomeUncertainError(
+                            "Tool succeeded but its durable receipt could not be committed",
+                            action_intent_id=action_intent.id,
+                        )
                 if idempotency_key is not None:
                     await self.idempotency_store.put(idempotency_key, result)
                 await self._audit(
@@ -199,14 +308,21 @@ class ToolExecutor:
                     },
                 )
                 return result
+            except ActionOutcomeUncertainError as error:
+                last_error = error
+                retryable = False
             except TimeoutError:
                 last_error = ToolTimeoutError(
                     f"Tool {definition.name} timed out after {definition.timeout_seconds}s"
                 )
-                retryable = TimeoutError in definition.retry_policy.retry_on
+                retryable = definition.idempotent and (
+                    TimeoutError in definition.retry_policy.retry_on
+                )
             except Exception as error:
                 last_error = error
-                retryable = isinstance(error, definition.retry_policy.retry_on)
+                retryable = definition.idempotent and isinstance(
+                    error, definition.retry_policy.retry_on
+                )
 
             if attempt < definition.retry_policy.max_attempts and retryable:
                 if definition.retry_policy.backoff_seconds:
@@ -229,9 +345,64 @@ class ToolExecutor:
             "failed",
             {"error_type": type(last_error).__name__},
         )
+        if action_intent is not None:
+            assert action_store is not None
+            await action_store.transition_action_intent(
+                intent_id=action_intent.id,
+                tenant_id=action_intent.tenant_id,
+                user_id=action_intent.user_id,
+                expected=frozenset({ActionIntentStatus.EXECUTING}),
+                status=ActionIntentStatus.UNCERTAIN,
+                error_code=type(last_error).__name__,
+            )
+            raise ActionOutcomeUncertainError(
+                f"Tool {definition.name} failed after side-effect execution began",
+                action_intent_id=action_intent.id,
+            ) from last_error
         if isinstance(last_error, ToolTimeoutError):
             raise last_error
         raise ToolExecutionError(f"Tool {definition.name} failed") from last_error
+
+    def _action_intent(
+        self,
+        definition: ToolDefinition,
+        call: ToolCall,
+        context: AgentContext,
+        *,
+        execution_scope: str,
+        arguments_checksum: str,
+        idempotency_identity: str,
+    ) -> ActionIntentRecord | None:
+        if definition.side_effect == "none" or self.action_intent_store is None:
+            return None
+        if not getattr(self.action_intent_store, "is_durable", False):
+            raise ValueError("Action intent store must be durable for side-effecting execution")
+        if context.tenant_id is None or context.user_id is None:
+            raise ValueError("Durable actions require trusted tenant_id and user_id")
+        stable_material = "\x1f".join(
+            (
+                context.tenant_id,
+                context.user_id,
+                execution_scope,
+                context.conversation_id or context.session_id,
+                definition.name,
+                idempotency_identity,
+                arguments_checksum,
+            )
+        )
+        intent_id = f"intent_{sha256(stable_material.encode()).hexdigest()}"
+        return ActionIntentRecord(
+            id=intent_id,
+            runtime_run_id=execution_scope,
+            tenant_id=context.tenant_id,
+            user_id=context.user_id,
+            conversation_id=context.conversation_id,
+            tool_name=definition.name,
+            call_id=call.id,
+            arguments_checksum=arguments_checksum,
+            idempotency_key=idempotency_identity,
+            side_effect=definition.side_effect,
+        )
 
     async def _audit(
         self,
@@ -272,3 +443,14 @@ async def execute_tool(
         context,
         execution_scope="standalone",
     )
+
+
+def _arguments_checksum(arguments: dict[str, Any]) -> str:
+    encoded = json.dumps(arguments, sort_keys=True, separators=(",", ":"), default=str)
+    return sha256(encoded.encode()).hexdigest()
+
+
+def _scoped_idempotency_key(context: AgentContext, tool_name: str, key: str) -> str:
+    if context.tenant_id is None and context.user_id is None:
+        return f"{tool_name}:{key}"
+    return f"{context.tenant_id or '-'}:{context.user_id or '-'}:{tool_name}:{key}"

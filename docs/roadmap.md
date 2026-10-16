@@ -102,8 +102,11 @@ implementation status for the reusable packages.
       structured rolling compaction, and owner-scoped large tool-output offloading.
 - [x] Phase U4: versioned standards resolution, verifier registration, owner-scoped
       evidence gates, and bounded repair/stagnation models.
-- [ ] Phase U5-U6: durable runtime state/recovery, then bounded autonomous single-agent
-      workflows compiled to the existing Task Runtime.
+- [x] Phase U5: owner-scoped durable runtime state and immutable pins, stable action
+      intents, restart-safe one-time approvals and receipts, safe lifecycle controls,
+      and lease-guarded reconciliation that blocks uncertain external effects.
+- [ ] Phase U6: bounded autonomous single-agent workflows compiled to the existing
+      Task Runtime, with evidence gates and finite repair/replan decisions.
 - [ ] Phase U7-U10: optional teams, Gemini/Ollama capabilities and adapters, speech
       ports, security/load hardening, examples, and developer documentation.
 

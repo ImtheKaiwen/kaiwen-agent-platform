@@ -12,6 +12,12 @@ The core exposes four independent persistence boundaries:
 Applications may use one adapter for all four boundaries or compose separate stores.
 The core does not require SQLAlchemy, a web framework, or a specific database.
 
+Durable workflow composition adds three separate boundaries: `RuntimeRunStore` for
+owner-scoped run state and immutable version pins, `ActionIntentStore` for external
+side-effect state and receipts, and `DurableApprovalStore` for one-time decisions.
+These records are intentionally separate from conversations and the compact legacy
+`AgentRun` model.
+
 ## SQLite reference adapter
 
 `SQLitePersistence` implements all four boundaries using the Python standard library.
@@ -32,6 +38,29 @@ agent = Agent(
 
 SQLite is the reference and local-development adapter. Multi-instance deployments
 should implement the same ports with PostgreSQL or another transactional store.
+
+`SQLitePersistence` also implements the durable workflow stores. The standalone
+`SQLiteIdempotencyStore` persists the existing tool receipt contract and may share
+the same database file. A durable tool execution supplies both stores explicitly:
+
+```python
+from kaiwen_agent.persistence import SQLiteIdempotencyStore, SQLitePersistence
+from kaiwen_agent.tools import DurableApprovalGate, ToolExecutor
+
+state = SQLitePersistence("runtime/agent.sqlite3")
+executor = ToolExecutor(
+    approval_gate=DurableApprovalGate(state),
+    action_intent_store=state,
+    idempotency_store=SQLiteIdempotencyStore("runtime/agent.sqlite3"),
+)
+```
+
+Pending approvals and prepared actions survive restart. A process interruption while
+the handler may already have produced an external effect is not treated as a normal
+retry: `RuntimeRecoveryManager` marks the intent uncertain and blocks the run for
+provider reconciliation or human review. Recovery must hold an injected `LeaseStore`;
+multi-host deployments must use a distributed implementation and enforce fencing at
+the protected write boundary. This is at-least-once execution, not exactly-once.
 
 ## SSE
 

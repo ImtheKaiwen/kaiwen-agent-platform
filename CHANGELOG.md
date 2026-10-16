@@ -21,6 +21,9 @@
   provenance-checked rolling compaction, and owner-scoped tool-output offloading.
 - Add versioned standards packs, deterministic requirement resolution, host verifier
   registration, evidence-backed completion gates, and bounded repair tracking.
+- Add owner-scoped durable workflow records with immutable configuration pins,
+  restart-safe action intents, one-time approvals, SQLite idempotency receipts, safe
+  lifecycle controls, and lease-guarded uncertain-action recovery.
 
 ## 0.4.0a1 — 2026-09-24
 

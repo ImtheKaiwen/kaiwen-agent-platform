@@ -22,6 +22,14 @@ class ApprovalRequiredError(AgentError):
     """Raised when an approval-protected tool has no approval gate."""
 
 
+class DurableApprovalRequiredError(ApprovalRequiredError):
+    """Raised with the durable approval identity a host must resolve."""
+
+    def __init__(self, message: str, *, approval_id: str) -> None:
+        super().__init__(message)
+        self.approval_id = approval_id
+
+
 class ApprovalDeniedError(AgentError):
     """Raised when a tool execution request is rejected."""
 
@@ -32,3 +40,11 @@ class ToolTimeoutError(AgentError):
 
 class ToolExecutionError(AgentError):
     """Raised when a tool handler fails after its retry policy is exhausted."""
+
+
+class ActionOutcomeUncertainError(ToolExecutionError):
+    """Raised when a prior external side effect cannot safely be retried."""
+
+    def __init__(self, message: str, *, action_intent_id: str) -> None:
+        super().__init__(message)
+        self.action_intent_id = action_intent_id
