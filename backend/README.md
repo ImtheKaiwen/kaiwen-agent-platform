@@ -69,6 +69,23 @@ async def main() -> None:
 asyncio.run(main())
 ```
 
+For a single-agent composition that keeps normal chat tool-free and makes action
+tools explicit:
+
+```python
+from kaiwen_agent import AgentRuntime, RuntimeIdentity
+
+runtime = AgentRuntime(name="assistant", model=provider, tools=[read_projects])
+reply = await runtime.chat(
+    "Merhaba",
+    identity=RuntimeIdentity(session_id="session-id"),
+)
+```
+
+`AgentRuntime.action()` exposes only the tool names selected by trusted host code.
+Workflow mode remains unavailable until durable run/recovery and completion-gate
+composition is installed; it never falls back to an unsafe in-memory workflow.
+
 `OPENAI_API_KEY` is read by the OpenAI SDK from the server environment. The
 runtime never stores it and it must never be exposed to browser code.
 

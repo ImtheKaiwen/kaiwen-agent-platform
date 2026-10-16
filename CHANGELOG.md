@@ -12,6 +12,9 @@
   health, server-side secret providers, distributed leases, and tenant-scoped
   metrics.
 - Add optional PostgreSQL/pgvector memory and Redis coordination adapters.
+- Add a compatibility-preserving, single-agent-first `AgentRuntime` with explicit
+  chat/action modes, independent autonomy levels, trusted identity propagation, and
+  deny-by-default tool exposure.
 
 ## 0.4.0a1 — 2026-09-24
 

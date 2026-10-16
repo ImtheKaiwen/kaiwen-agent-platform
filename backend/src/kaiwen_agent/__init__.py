@@ -98,6 +98,13 @@ from kaiwen_agent.policy import (
 )
 from kaiwen_agent.prompts import PromptDefinition, PromptRegistry, PromptRunRecord
 from kaiwen_agent.replay import ReplayPlayer, ReplayRecorder, SimulationSideEffectPolicy
+from kaiwen_agent.runtime import (
+    AgentRuntime,
+    AutonomyLevel,
+    RunMode,
+    RuntimeIdentity,
+    RuntimeModeUnavailableError,
+)
 from kaiwen_agent.secrets import EnvironmentSecretProvider, SecretProvider, SecretValue
 from kaiwen_agent.skills import SkillDefinition, SkillRegistry, SkillStep
 from kaiwen_agent.tools.approval import ApprovalGate, ApprovalRequest
@@ -110,6 +117,7 @@ from kaiwen_agent.watches import WatchEngine, WatchStrategy
 __all__ = [
     "Agent",
     "AgentContext",
+    "AgentRuntime",
     "AgentJob",
     "AgentJobRef",
     "ArtifactContext",
@@ -119,6 +127,7 @@ __all__ = [
     "ArtifactType",
     "AttentionEngine",
     "AttentionSeverity",
+    "AutonomyLevel",
     "ApprovalGate",
     "ApprovalRequest",
     "BackpressureController",
@@ -187,6 +196,9 @@ __all__ = [
     "RetryPolicy",
     "RuntimePolicy",
     "RuntimeMetrics",
+    "RunMode",
+    "RuntimeIdentity",
+    "RuntimeModeUnavailableError",
     "SchedulerTaskRuntimeAdapter",
     "SchedulingPolicy",
     "SessionMemoryManager",

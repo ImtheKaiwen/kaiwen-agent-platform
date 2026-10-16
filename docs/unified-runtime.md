@@ -54,6 +54,10 @@ Add trusted runtime identity, explicit mode and autonomy models, composition
 validation, and `chat`/bounded synchronous `action` paths over the existing `Agent`.
 No scheduler, team, or quality gate is created for chat.
 
+Implemented: `AgentRuntime` preserves the legacy loop, hides every tool in chat,
+requires an explicit trusted tool-name subset for action, carries trusted identity
+into `AgentContext`, and rejects workflow mode until its durable controller exists.
+
 ### U2 — Definitions, profiles, and version pins
 
 Add immutable `AgentDefinition`, its registry, a provider registry/factory boundary,

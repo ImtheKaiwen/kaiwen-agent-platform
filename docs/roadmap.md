@@ -94,7 +94,7 @@ implementation status for the reusable packages.
 
 - [x] Phase U0: freeze legacy public entry points and accept the single-agent-first,
       standards-separation, and safe-boundary recovery architecture decisions.
-- [ ] Phase U1: minimal `AgentRuntime` composition with explicit mode/autonomy,
+- [x] Phase U1: minimal `AgentRuntime` composition with explicit mode/autonomy,
       trusted identity, chat fast path, and bounded synchronous action path.
 - [ ] Phase U2-U3: immutable agent/workspace definitions, provider composition,
       version pins, context integration, model-aware token accounting, and compaction.
