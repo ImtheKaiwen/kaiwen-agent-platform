@@ -189,6 +189,11 @@ Complete crash, multitenant, prompt-injection, failover, pressure, budget, and c
 install matrices. Add provider-free examples and documentation. Protocol schemas are
 expanded only when a stable browser-visible semantic event is actually required.
 
+DX foundation implemented: provider-free simple-runtime and speech-pipeline
+quickstarts are type-checked and executed by CI. The broader hardening matrix and
+specialized optional adapters remain open; this slice does not claim production
+readiness.
+
 ## Non-goals
 
 - No product routes, prompts, branding, authentication, or domain tools.

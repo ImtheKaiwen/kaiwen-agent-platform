@@ -101,6 +101,11 @@ tool visibility against both capability and workspace allowlists, and records th
 selected versions in runtime context. Policy and execution-time permission checks
 remain authoritative; configuration never grants additional access.
 
+The smallest credential-free runtime example is
+[`examples/simple-runtime`](../examples/simple-runtime). The provider-neutral fake
+speech composition is in [`examples/speech-pipeline`](../examples/speech-pipeline).
+Both are executed by CI so their public imports stay valid.
+
 Applications may inject `ContextBuilder`, `ContextWindow`, and
 `ContextCompactionManager` into the runtime. Context collection stays optional for
 simple chat, uses a provider-specific `TokenCounter` when available, and never treats
@@ -151,6 +156,8 @@ runtime never stores it and it must never be exposed to browser code.
 - Optional PostgreSQL full-text + pgvector hybrid memory retrieval via
   `kaiwen-agent[postgres-memory]`.
 - Optional Redis distributed lease coordination via `kaiwen-agent[redis]`.
+- Optional root-bounded workspace filesystem tools and trusted MCP bindings. Remote
+  discovery does not grant authority; both use the central tool safety pipeline.
 
 Realtime usage and integration boundaries are documented in the repository's
 `docs/realtime.md`, `docs/openai-live.md`, and `docs/conversation-bridge.md` files.

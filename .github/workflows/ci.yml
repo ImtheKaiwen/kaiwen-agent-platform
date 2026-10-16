@@ -19,7 +19,11 @@ jobs:
       - run: python -m pip install -e ".[dev]"
       - run: python -m ruff check .
       - run: python -m mypy src/kaiwen_agent
+      - run: python -m mypy ../examples/simple-runtime/main.py
+      - run: python -m mypy ../examples/speech-pipeline/main.py
       - run: python -m pytest
+      - run: python ../examples/simple-runtime/main.py
+      - run: python ../examples/speech-pipeline/main.py
 
   node:
     runs-on: ubuntu-latest

@@ -11,6 +11,8 @@ tools, prompts, persistence models, and visual themes.
 - `packages/protocol`: canonical, versioned JSON Schema and TypeScript contracts.
 - `packages/ui-agent`: headless browser runtime and optional React Dynamic Island.
 - `examples/basic-agent`: provider-free executable example.
+- `examples/simple-runtime`: minimal provider-free `AgentRuntime` chat quickstart.
+- `examples/speech-pipeline`: provider-free ephemeral STT/TTS composition.
 
 ## Install
 

@@ -34,6 +34,7 @@
   pipeline contracts with explicit audio-processing permission and deterministic fakes.
 - Add bounded workspace filesystem tools and trusted MCP tool bindings that preserve
   central permissions, approvals, side-effect classification, and execution policy.
+- Add credential-free runtime and speech quickstarts that execute in CI.
 
 ## 0.4.0a1 — 2026-09-24
 

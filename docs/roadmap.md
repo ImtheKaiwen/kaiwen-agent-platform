@@ -118,8 +118,10 @@ implementation status for the reusable packages.
       fake adapters. Heavy speech engines and ecosystem tools remain optional.
 - [x] Phase U9 ecosystem foundation: host-bounded workspace filesystem tools and
       trusted MCP bindings that route through the central tool safety pipeline.
-- [ ] Phase U10: optional document and specialized adapters, security/load
-      hardening, examples, and developer documentation.
+- [x] Phase U10 DX foundation: credential-free simple-runtime and speech examples
+      whose imports and execution are continuously verified by CI.
+- [ ] Phase U10 hardening: optional document and specialized adapters, the remaining
+      crash/multitenant/injection/load matrices, and expanded developer documentation.
 
 - [ ] Phase R4 / G: authenticated portfolio admin integration, WebRTC bootstrap route,
       Dynamic Island voice states, task notifications, and semantic UI dispatch.
