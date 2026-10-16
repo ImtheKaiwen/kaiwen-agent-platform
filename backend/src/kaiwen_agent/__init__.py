@@ -163,6 +163,16 @@ from kaiwen_agent.standards import (
     StandardsRegistry,
     StandardsResolver,
 )
+from kaiwen_agent.teams import (
+    TeamCompositionError,
+    TeamContextReference,
+    TeamDefinition,
+    TeamDefinitionRegistry,
+    TeamDelegationRequest,
+    TeamHandoff,
+    TeamMemberDefinition,
+    TeamRuntime,
+)
 from kaiwen_agent.tools.approval import ApprovalGate, ApprovalRequest, DurableApprovalGate
 from kaiwen_agent.tools.decorator import tool
 from kaiwen_agent.tools.definition import RetryPolicy
@@ -339,6 +349,14 @@ __all__ = [
     "StandardsResolver",
     "SubagentDelegator",
     "SummaryGenerator",
+    "TeamCompositionError",
+    "TeamContextReference",
+    "TeamDefinition",
+    "TeamDefinitionRegistry",
+    "TeamDelegationRequest",
+    "TeamHandoff",
+    "TeamMemberDefinition",
+    "TeamRuntime",
     "TextJobBridge",
     "ToolExecutor",
     "ToolOutputOffloadError",

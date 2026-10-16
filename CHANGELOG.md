@@ -26,6 +26,8 @@
   lifecycle controls, and lease-guarded uncertain-action recovery.
 - Add validated single-agent workflow plans compiled into the existing Task Runtime,
   with owner isolation, evidence-backed completion, and finite repair/replan control.
+- Add optional versioned team composition over the existing delegation and job
+  runtime, with least-privilege member selection and bounded structured handoffs.
 
 ## 0.4.0a1 — 2026-09-24
 

@@ -136,6 +136,15 @@ boundary. Enforce capability intersection, private context views, bounded depth 
 fanout, resource locks, structured handoff, and shared completion contracts. The
 single-agent API remains independent.
 
+Implemented: immutable `TeamDefinition` records bind exact registered lead/member
+agent versions and role capability ceilings. `TeamRuntime` performs deterministic
+least-privilege profile selection, forwards only typed context references through the
+existing `SubagentDelegator`, and executes children through the existing `JobManager`
+and Task Runtime. Central delegation policy remains authoritative for depth,
+concurrency, per-run limits, and capability intersection. Child results cross the
+boundary only as a bounded `TeamHandoff`; raw context, logs, and undeclared result
+fields are not exposed. Dynamic agent synthesis is intentionally unsupported.
+
 ### U8 — Provider capabilities and adapters
 
 Add technical `ModelCapabilities` separately from agent `CapabilityManifest`, then

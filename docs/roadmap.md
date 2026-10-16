@@ -107,8 +107,11 @@ implementation status for the reusable packages.
       and lease-guarded reconciliation that blocks uncertain external effects.
 - [x] Phase U6: bounded autonomous single-agent workflows compiled to the existing
       Task Runtime, with evidence gates and finite repair/replan decisions.
-- [ ] Phase U7-U10: optional teams, Gemini/Ollama capabilities and adapters, speech
-      ports, security/load hardening, examples, and developer documentation.
+- [x] Phase U7: optional versioned teams over the existing delegation, JobManager,
+      and Task Runtime boundaries, with deterministic profile selection and bounded
+      structured handoff.
+- [ ] Phase U8-U10: Gemini/Ollama capabilities and adapters, speech ports,
+      security/load hardening, examples, and developer documentation.
 
 - [ ] Phase R4 / G: authenticated portfolio admin integration, WebRTC bootstrap route,
       Dynamic Island voice states, task notifications, and semantic UI dispatch.
