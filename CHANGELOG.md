@@ -28,6 +28,8 @@
   with owner isolation, evidence-backed completion, and finite repair/replan control.
 - Add optional versioned team composition over the existing delegation and job
   runtime, with least-privilege member selection and bounded structured handoffs.
+- Add technical model capability records, fail-closed data-locality routing, and
+  optional Gemini/Ollama adapters with centrally executed tool proposals.
 
 ## 0.4.0a1 — 2026-09-24
 

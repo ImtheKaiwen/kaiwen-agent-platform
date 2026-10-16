@@ -14,6 +14,13 @@ For OpenAI Live primary WebSocket support:
 pip install "kaiwen-agent[openai-live]"
 ```
 
+Optional text providers are installed independently:
+
+```bash
+pip install "kaiwen-agent[gemini]"
+pip install "kaiwen-agent[ollama]"
+```
+
 ## Minimal agent
 
 ```python
@@ -83,8 +90,9 @@ reply = await runtime.chat(
 ```
 
 `AgentRuntime.action()` exposes only the tool names selected by trusted host code.
-Workflow mode remains unavailable until durable run/recovery and completion-gate
-composition is installed; it never falls back to an unsafe in-memory workflow.
+`AgentRuntime.run()` keeps workflow mode fail-closed. Autonomous hosts explicitly
+compose `WorkflowController` with durable run state, the existing Task Runtime, and
+completion gates; it never falls back to an unsafe in-memory workflow.
 
 Larger applications can register immutable `AgentDefinition` records and compose
 them through `AgentFactory` plus a strict `WorkspaceProfile`. The factory resolves
@@ -119,6 +127,10 @@ runtime never stores it and it must never be exposed to browser code.
 - Durable task graphs, workers, checkpoints, mailbox control, resource locks,
   cancellation, and bounded concurrency.
 - Optional OpenAI Responses API adapter.
+- Optional Gemini Generate Content and Ollama Chat adapters. Provider SDKs only
+  return tool proposals; central runtime execution remains authoritative.
+- Technical model capability records and data-locality-aware routing that prevents
+  cloud fallback for `local_only` requests.
 - Provider-neutral Realtime sessions, OpenAI Live/WebRTC adapters, durable
   text-and-voice conversations, and allowlisted background task delegation.
 - Trusted OpenAI Live sideband execution through the same permission, approval,

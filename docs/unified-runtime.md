@@ -151,6 +151,15 @@ Add technical `ModelCapabilities` separately from agent `CapabilityManifest`, th
 optional Gemini and Ollama adapters, tool strategies, data-locality-aware fallback,
 and provider contract tests. Provider SDKs never execute tools directly.
 
+Implemented: immutable technical `ModelCapabilities` and a provider/model registry
+remain separate from authorization-oriented agent manifests. Routing enforces local
+and regional data constraints before policy evaluation, so local-only inputs cannot
+fall through to cloud routes. Optional Gemini Generate Content and Ollama Chat
+adapters normalize native function-call proposals while keeping execution in the
+central runtime; text-only strategy neither exposes tool schemas nor accepts tool
+calls. Unsupported structured/delegated strategies fail during composition rather
+than silently weakening safety.
+
 ### U9 — Speech and optional ecosystem ports
 
 Add lightweight STT/TTS/transcript contracts and fake adapters that compose with the

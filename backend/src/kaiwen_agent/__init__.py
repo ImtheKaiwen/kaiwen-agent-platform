@@ -87,7 +87,16 @@ from kaiwen_agent.model_routing import (
     ModelRouter,
     ModelTier,
 )
-from kaiwen_agent.models import ModelProviderFactory, ProviderRegistry
+from kaiwen_agent.models import (
+    DataLocality,
+    GeminiGenerateContentProvider,
+    ModelCapabilities,
+    ModelCapabilitiesRegistry,
+    ModelProviderFactory,
+    ModelToolStrategy,
+    OllamaChatProvider,
+    ProviderRegistry,
+)
 from kaiwen_agent.models.base import ModelProvider
 from kaiwen_agent.objectives import ObjectiveManager, ObjectiveStatus
 from kaiwen_agent.observability import (
@@ -260,6 +269,7 @@ __all__ = [
     "DurableRuntimeStores",
     "ConfiguredAgentRuntime",
     "DeadLetterManager",
+    "DataLocality",
     "DelegationPolicy",
     "DelegationRequest",
     "DistributedLease",
@@ -268,6 +278,7 @@ __all__ = [
     "EvaluationRunner",
     "EvaluationSuite",
     "HeartbeatMonitor",
+    "GeminiGenerateContentProvider",
     "InMemoryLifecycleStore",
     "InMemoryLeaseStore",
     "InMemoryLongTermMemoryStore",
@@ -293,9 +304,13 @@ __all__ = [
     "ModelProvider",
     "ModelProviderFactory",
     "ModelComplexity",
+    "ModelCapabilities",
+    "ModelCapabilitiesRegistry",
     "ModelRoute",
     "ModelRouter",
     "ModelTier",
+    "ModelToolStrategy",
+    "OllamaChatProvider",
     "ObjectiveManager",
     "ObjectiveStatus",
     "PolicyContext",

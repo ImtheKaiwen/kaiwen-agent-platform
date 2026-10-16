@@ -110,8 +110,11 @@ implementation status for the reusable packages.
 - [x] Phase U7: optional versioned teams over the existing delegation, JobManager,
       and Task Runtime boundaries, with deterministic profile selection and bounded
       structured handoff.
-- [ ] Phase U8-U10: Gemini/Ollama capabilities and adapters, speech ports,
-      security/load hardening, examples, and developer documentation.
+- [x] Phase U8: technical model capabilities, data-locality-aware routing, and
+      optional Gemini/Ollama adapters that return tool proposals without executing
+      tools inside provider SDKs.
+- [ ] Phase U9-U10: speech ports, security/load hardening, examples, and developer
+      documentation.
 
 - [ ] Phase R4 / G: authenticated portfolio admin integration, WebRTC bootstrap route,
       Dynamic Island voice states, task notifications, and semantic UI dispatch.

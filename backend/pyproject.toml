@@ -34,6 +34,12 @@ Issues = "https://github.com/ImtheKaiwen/kaiwen-agent-platform/issues"
 openai = [
   "openai>=2,<3",
 ]
+gemini = [
+  "google-genai>=1,<2",
+]
+ollama = [
+  "ollama>=0.6,<1",
+]
 openai-live = [
   "websockets>=15,<17",
 ]

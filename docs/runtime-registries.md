@@ -10,6 +10,17 @@ composition, and production persistence.
 It evaluates every candidate through the central `PolicyEngine`, fails closed when no
 route is explicitly allowed, and never creates a provider client or handles a secret.
 The host maps the returned provider/model identifiers to its server-side adapters.
+Routes also declare data locality. A `local_only` resolution considers only local
+routes and fails closed when none are policy-approved; it never silently falls back
+to a cloud provider. Region-restricted requests accept an explicitly matching region
+or a local route.
+
+`ModelCapabilities` separately describes technical provider/model behavior such as
+context size, output limits, native tool support, structured output, modalities, and
+locality. It does not grant tools, permissions, memory access, or delegation rights.
+Gemini and Ollama adapters disable/avoid SDK-owned tool execution and return only
+normalized `ToolCall` proposals to the existing central agent loop. Text-only models
+receive no tool schemas and provider-returned calls are ignored.
 
 ## Budgets
 

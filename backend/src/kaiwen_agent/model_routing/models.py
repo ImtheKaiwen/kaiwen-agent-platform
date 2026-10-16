@@ -4,6 +4,8 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from kaiwen_agent.models.capabilities import DataLocality
+
 
 class ModelTier(StrEnum):
     CHEAP = "cheap"
@@ -30,6 +32,8 @@ class ModelRoute(BaseModel):
     complexities: frozenset[ModelComplexity] = Field(min_length=1)
     priority: int = Field(default=0, ge=-100, le=100)
     enabled: bool = True
+    data_locality: DataLocality = DataLocality.CLOUD_ALLOWED
+    regions: frozenset[str] = Field(default_factory=frozenset)
 
 
 class ModelSelection(BaseModel):
@@ -41,3 +45,5 @@ class ModelSelection(BaseModel):
     tier: ModelTier
     capability: str
     complexity: ModelComplexity
+    data_locality: DataLocality = DataLocality.CLOUD_ALLOWED
+    regions: frozenset[str] = Field(default_factory=frozenset)
