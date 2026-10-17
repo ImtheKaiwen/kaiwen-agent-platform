@@ -8,12 +8,13 @@ from pathlib import Path
 from typing import Any
 
 from kaiwen_agent.agents import VersionedReference
-from kaiwen_agent.artifacts import ArtifactCreate, ArtifactManager, ArtifactType
+from kaiwen_agent.artifacts import ArtifactContext, ArtifactCreate, ArtifactManager, ArtifactType
 from kaiwen_agent.control import RunControl
 from kaiwen_agent.integrations import WorkspaceFilesystem
 from kaiwen_agent.persistence import SQLitePersistence
 from kaiwen_agent.quality import (
     CompletionGate,
+    VerificationContext,
     VerificationResult,
     VerificationStatus,
     VerifierRegistry,
@@ -28,6 +29,7 @@ from kaiwen_agent.standards import (
     RequirementDefinition,
     RequirementObligation,
     RequirementSeverity,
+    ResolvedRequirement,
     StandardsPack,
     StandardsRegistry,
     StandardsResolver,
@@ -51,7 +53,12 @@ class TestVerifier:
     def __init__(self, evidence: list[str]) -> None:
         self.evidence = evidence
 
-    async def verify(self, requirement, *, context) -> VerificationResult:
+    async def verify(
+        self,
+        requirement: ResolvedRequirement,
+        *,
+        context: VerificationContext,
+    ) -> VerificationResult:
         del requirement, context
         return VerificationResult(
             requirement_id="software.tests",
@@ -366,9 +373,7 @@ class TodoStoreTests(TestCase):
     }
 
 
-def identity_artifact_context(identity: RuntimeIdentity, run_id: str):
-    from kaiwen_agent.artifacts import ArtifactContext
-
+def identity_artifact_context(identity: RuntimeIdentity, run_id: str) -> ArtifactContext:
     return ArtifactContext(
         tenant_id=identity.tenant_id or "validation",
         user_id=identity.user_id or "developer",
