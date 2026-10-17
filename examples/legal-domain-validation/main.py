@@ -5,13 +5,14 @@ import asyncio
 import json
 from pathlib import Path
 
+from pydantic import BaseModel, ConfigDict, Field
+
 from kaiwen_agent import AgentContext, tool
 from kaiwen_agent.exceptions import ApprovalDeniedError
 from kaiwen_agent.integrations import WorkspaceFilesystem, WorkspacePathError
 from kaiwen_agent.tools.approval import StaticApprovalGate
 from kaiwen_agent.tools.execution import ToolExecutor
 from kaiwen_agent.types import ToolCall
-from pydantic import BaseModel, ConfigDict, Field
 
 
 class SendInput(BaseModel):
@@ -30,9 +31,7 @@ async def validate(workspace: Path) -> dict[str, object]:
         "The fictional Acme policy requires human approval before external disclosure.",
         encoding="utf-8",
     )
-    (private / "client.txt").write_text(
-        "fictional private client data", encoding="utf-8"
-    )
+    (private / "client.txt").write_text("fictional private client data", encoding="utf-8")
 
     filesystem = WorkspaceFilesystem(
         workspace_id="legal-validation",

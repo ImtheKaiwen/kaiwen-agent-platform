@@ -6,10 +6,11 @@ from pathlib import Path
 from typing import Literal
 
 from dotenv import load_dotenv
+from pydantic import BaseModel
+
 from kaiwen_agent import Agent, AgentContext, tool
 from kaiwen_agent.models.openai import OpenAIResponsesProvider
 from kaiwen_agent.types import AgentInput
-from pydantic import BaseModel
 
 ROOT = Path(__file__).parents[2]
 
@@ -24,9 +25,7 @@ class ConnectivityInput(BaseModel):
     input_model=ConnectivityInput,
     permissions={"connectivity.read"},
 )
-async def check_connectivity(
-    context: AgentContext, arguments: ConnectivityInput
-) -> dict[str, str]:
+async def check_connectivity(context: AgentContext, arguments: ConnectivityInput) -> dict[str, str]:
     del context, arguments
     return {"status": "ok"}
 

@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 
 from dotenv import load_dotenv
+
 from kaiwen_agent.agents import AgentDefinitionRegistry
 from kaiwen_agent.capabilities import CapabilityRegistry
 from kaiwen_agent.kits.coding import (
@@ -42,9 +43,7 @@ async def main() -> None:
         tools=ToolRegistry(),
         standards=StandardsRegistry(),
     )
-    agent = CodingKitFactory(factory).create(
-        CodingKitConfig(provider_ref="openai:coding")
-    )
+    agent = CodingKitFactory(factory).create(CodingKitConfig(provider_ref="openai:coding"))
     preference = CodingConversationPreferences(user_language=CodingUserLanguage.TURKISH)
     result = await agent.chat(
         "Yalnızca 'Hazır.' yazarak cevap ver.",

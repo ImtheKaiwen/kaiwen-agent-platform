@@ -10,9 +10,7 @@ async def main() -> None:
         name="quickstart",
         model=FakeModelProvider([ModelResponse(text="Hello from Kaiwen Agent.")]),
     )
-    result = await runtime.chat(
-        "Hello", identity=RuntimeIdentity(session_id="quickstart")
-    )
+    result = await runtime.chat("Hello", identity=RuntimeIdentity(session_id="quickstart"))
     print(result.text)
 
 
