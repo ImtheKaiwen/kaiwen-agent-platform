@@ -1,0 +1,97 @@
+"""Opt-in generic tool adapters that still execute through ToolExecutor."""
+
+from kaiwen_agent.toolkits.commands import (
+    CommandCatalog,
+    CommandConfigurationError,
+    CommandParameter,
+    CommandPreset,
+    CommandRunInput,
+    FakeSandboxRunner,
+    SandboxCommand,
+    SandboxResult,
+    SandboxRunner,
+    SandboxUnavailableError,
+    UnsupportedSandboxRunner,
+    command_tool,
+)
+from kaiwen_agent.toolkits.filesystem import (
+    WorkspaceBatchItem,
+    WorkspaceListInput,
+    WorkspaceReadBatchInput,
+    WorkspaceReadLinesInput,
+    WorkspaceStatInput,
+    workspace_read_tools,
+)
+from kaiwen_agent.toolkits.git import (
+    GitCommandError,
+    GitDiffInput,
+    GitLogInput,
+    GitShowInput,
+    GitStatusInput,
+    GitUnavailableError,
+    ReadOnlyGitRepository,
+    git_read_tools,
+)
+from kaiwen_agent.toolkits.patch import (
+    PatchConflictError,
+    PatchFormatError,
+    WorkspaceMkdirInput,
+    WorkspacePatchInput,
+    apply_unified_patch,
+    workspace_write_tools,
+)
+from kaiwen_agent.toolkits.project import (
+    ProjectDetectInput,
+    ProjectDetector,
+    ProjectManifest,
+    ProjectSnapshot,
+    project_detect_tool,
+)
+from kaiwen_agent.toolkits.registry import ToolBundleDefinition, ToolBundleRegistry
+from kaiwen_agent.toolkits.search import WorkspaceSearchInput, workspace_search_tool
+from kaiwen_agent.toolkits.testing import testing_tools
+
+__all__ = [
+    "CommandCatalog",
+    "CommandConfigurationError",
+    "CommandParameter",
+    "CommandPreset",
+    "CommandRunInput",
+    "FakeSandboxRunner",
+    "GitCommandError",
+    "GitDiffInput",
+    "GitLogInput",
+    "GitShowInput",
+    "GitStatusInput",
+    "GitUnavailableError",
+    "PatchConflictError",
+    "PatchFormatError",
+    "ProjectDetectInput",
+    "ProjectDetector",
+    "ProjectManifest",
+    "ProjectSnapshot",
+    "ReadOnlyGitRepository",
+    "SandboxCommand",
+    "SandboxResult",
+    "SandboxRunner",
+    "SandboxUnavailableError",
+    "ToolBundleDefinition",
+    "ToolBundleRegistry",
+    "UnsupportedSandboxRunner",
+    "WorkspaceBatchItem",
+    "WorkspaceListInput",
+    "WorkspaceMkdirInput",
+    "WorkspacePatchInput",
+    "WorkspaceReadBatchInput",
+    "WorkspaceReadLinesInput",
+    "WorkspaceSearchInput",
+    "WorkspaceStatInput",
+    "apply_unified_patch",
+    "command_tool",
+    "git_read_tools",
+    "project_detect_tool",
+    "testing_tools",
+    "workspace_read_tools",
+    "workspace_search_tool",
+    "workspace_write_tools",
+]

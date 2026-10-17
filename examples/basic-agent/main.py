@@ -1,10 +1,9 @@
 import asyncio
 
-from pydantic import BaseModel
-
 from kaiwen_agent import Agent, AgentContext, tool
 from kaiwen_agent.models.fake import FakeModelProvider
 from kaiwen_agent.types import AgentInput, ModelResponse, ToolCall
+from pydantic import BaseModel
 
 
 class ProjectQuery(BaseModel):
@@ -17,7 +16,9 @@ class ProjectQuery(BaseModel):
     input_model=ProjectQuery,
     permissions={"projects.read"},
 )
-async def read_projects(context: AgentContext, query: ProjectQuery) -> list[dict[str, str]]:
+async def read_projects(
+    context: AgentContext, query: ProjectQuery
+) -> list[dict[str, str]]:
     del context
     projects = [{"name": "Cube Rivals", "category": "game"}]
     if query.category:

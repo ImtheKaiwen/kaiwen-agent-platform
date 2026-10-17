@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+## 0.6.0a1 — 2026-10-17
+
+- Add opt-in first-party Coding Kits with packaged English role prompts, adaptive
+  standards, evidence verifiers, bounded project discovery and proportionate docs.
+- Add safe read/patch/Git/command toolkits, with approval-gated writes and injected
+  sandbox execution instead of an unrestricted host shell.
+- Add `CodingAgent` and adaptive `CodingTeam` composition over existing runtime,
+  workflow, team, policy, recovery, context and observability systems.
+- Add provider capability/locality preflight for host-registered OpenAI, Gemini and
+  Ollama configurations without embedding credentials or claiming unrun live tests.
+
 ## 0.5.0a1 — 2026-10-17
 
 - Add deterministic lifecycle, central policy, bounded context, short-term and

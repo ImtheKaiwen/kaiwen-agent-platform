@@ -55,6 +55,10 @@ jobs:
         working-directory: backend
       - run: python -m mypy --no-incremental ../examples/legal-domain-validation/main.py
         working-directory: backend
+      - run: python -m mypy --no-incremental ../examples/coding-kit-fake/main.py
+        working-directory: backend
+      - run: python -m mypy --no-incremental ../examples/coding-kit-openai/main.py
+        working-directory: backend
       - run: python -m pytest
         working-directory: backend
       - run: python ../examples/validation-consumer/main.py "$RUNNER_TEMP/todo-consumer"
