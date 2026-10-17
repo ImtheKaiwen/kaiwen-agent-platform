@@ -55,9 +55,7 @@ class TestVerifier:
         del requirement, context
         return VerificationResult(
             requirement_id="software.tests",
-            status=VerificationStatus.PASS
-            if self.evidence
-            else VerificationStatus.FAIL,
+            status=VerificationStatus.PASS if self.evidence else VerificationStatus.FAIL,
             evidence_refs=tuple(self.evidence),
             verifier_id=self.verifier_id,
         )
@@ -71,9 +69,7 @@ def _write(filesystem: WorkspaceFilesystem, path: str, content: str) -> None:
 
 async def validate(workspace: Path) -> dict[str, Any]:
     workspace.mkdir(parents=True, exist_ok=True)
-    filesystem = WorkspaceFilesystem(
-        workspace_id="todo-validation", roots={"project": workspace}
-    )
+    filesystem = WorkspaceFilesystem(workspace_id="todo-validation", roots={"project": workspace})
     database = workspace / ".validation.sqlite3"
     store = SQLitePersistence(database)
     artifacts = ArtifactManager()
@@ -267,9 +263,7 @@ class TodoStoreTests(TestCase):
         await context.checkpoint(state={"phase": "tested", "returncode": 0})
         return {"summary": "Tests passed", "evidence_refs": [artifact.id]}
 
-    async def reviewer(
-        task: AgentTask, context: TaskExecutionContext
-    ) -> dict[str, Any]:
+    async def reviewer(task: AgentTask, context: TaskExecutionContext) -> dict[str, Any]:
         del task
         required = (
             "PLAN.md",
@@ -302,9 +296,7 @@ class TodoStoreTests(TestCase):
                             description="Generated application tests must pass",
                             obligation=RequirementObligation.MUST,
                             severity=RequirementSeverity.ERROR,
-                            acceptance_criteria=(
-                                "Unit test command exits successfully",
-                            ),
+                            acceptance_criteria=("Unit test command exits successfully",),
                             verifier_ref="python.tests",
                             evidence_types=frozenset({"test_report"}),
                         ),
@@ -320,9 +312,7 @@ class TodoStoreTests(TestCase):
         compiler=WorkflowCompiler(
             workers=workers,
             worker_allowlist=frozenset({"planner", "coder", "tester", "reviewer"}),
-            effective_capabilities=frozenset(
-                {"workspace.read", "workspace.write", "tests.run"}
-            ),
+            effective_capabilities=frozenset({"workspace.read", "workspace.write", "tests.run"}),
         ),
         scheduler_factory=lambda graph: TaskScheduler(
             graph=graph,
@@ -371,9 +361,7 @@ class TodoStoreTests(TestCase):
     return {
         "status": outcome.status.value,
         "tasks": [task.metadata["logical_task_id"] for task in outcome.tasks],
-        "quality": outcome.quality_result.status.value
-        if outcome.quality_result
-        else None,
+        "quality": outcome.quality_result.status.value if outcome.quality_result else None,
         "workspace": str(workspace),
     }
 
