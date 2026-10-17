@@ -40,9 +40,7 @@ class TeamRuntime:
         self._members = {member.role: member for member in definition.members}
         self._validate_definition()
 
-    async def delegate(
-        self, context: JobContext, request: TeamDelegationRequest
-    ) -> AgentJobRef:
+    async def delegate(self, context: JobContext, request: TeamDelegationRequest) -> AgentJobRef:
         self._validate_caller(context, parent_job_id=request.parent_job_id)
         member = self.select_member(
             role=request.role,
@@ -128,9 +126,7 @@ class TeamRuntime:
         for member in self.definition.members:
             agent = self.agents.resolve(member.agent_ref)
             if not member.capabilities <= agent.permissions:
-                raise TeamCompositionError(
-                    f"Team role {member.role} exceeds agent permissions"
-                )
+                raise TeamCompositionError(f"Team role {member.role} exceeds agent permissions")
 
     def _validate_caller(self, context: JobContext, *, parent_job_id: str | None) -> None:
         if context.agent_id == self.definition.lead_agent_ref.id:

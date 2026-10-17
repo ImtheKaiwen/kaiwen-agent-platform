@@ -141,9 +141,7 @@ def test_team_selects_least_privileged_member_and_returns_bounded_handoff() -> N
             TeamDelegationRequest(
                 objective="Review the change",
                 requested_capabilities=frozenset({"repo.read"}),
-                context_refs=(
-                    TeamContextReference(name="spec", reference="artifact://spec-1"),
-                ),
+                context_refs=(TeamContextReference(name="spec", reference="artifact://spec-1"),),
             ),
         )
         handoff = await runtime.wait_handoff(_context(), reference.id)

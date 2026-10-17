@@ -47,6 +47,11 @@
   quickstarts.
 - Add a concurrent multitenant regression for exact event visibility, action-intent
   identity, and restart-safe receipt replay under deliberately colliding client IDs.
+- Add a real subprocess-boundary checkpoint recovery regression and installed-wheel
+  consumer validations for an isolated Todo workflow and a policy-bounded fictional
+  legal domain.
+- Require formatter checks and the isolated consumer validations in CI and release
+  verification.
 
 ## 0.4.0a1 — 2026-09-24
 

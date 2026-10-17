@@ -100,9 +100,7 @@ def test_retryable_initial_failure_uses_next_approved_candidate() -> None:
     )
 
     assert response.text == "fallback"
-    assert response.provider_state == FailoverProviderState(
-        route_id="fallback", state={"id": "b"}
-    )
+    assert response.provider_state == FailoverProviderState(route_id="fallback", state={"id": "b"})
     assert len(primary.calls) == len(fallback.calls) == 1
 
 
@@ -210,8 +208,6 @@ def test_failover_returns_tool_proposals_without_executing_them() -> None:
 def test_catch_all_exception_class_is_rejected() -> None:
     with pytest.raises(ModelFailoverConfigurationError, match="specific Exception"):
         FailoverModelProvider(
-            candidates=[
-                FailoverCandidate(_selection("primary"), RecordingProvider([]))
-            ],
+            candidates=[FailoverCandidate(_selection("primary"), RecordingProvider([]))],
             retryable_exceptions=(Exception,),
         )

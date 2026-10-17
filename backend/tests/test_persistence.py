@@ -99,9 +99,7 @@ def test_sqlite_scoped_events_fail_closed_across_owner_boundaries(tmp_path) -> N
                 "user_id": "user_2",
             }
         )
-        legacy = first.model_copy(
-            update={"id": "evt_legacy", "tenant_id": None, "user_id": None}
-        )
+        legacy = first.model_copy(update={"id": "evt_legacy", "tenant_id": None, "user_id": None})
         for event in (first, second, legacy):
             await store.append(event)
 

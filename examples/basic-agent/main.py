@@ -16,7 +16,9 @@ class ProjectQuery(BaseModel):
     input_model=ProjectQuery,
     permissions={"projects.read"},
 )
-async def read_projects(context: AgentContext, query: ProjectQuery) -> list[dict[str, str]]:
+async def read_projects(
+    context: AgentContext, query: ProjectQuery
+) -> list[dict[str, str]]:
     del context
     projects = [{"name": "Cube Rivals", "category": "game"}]
     if query.category:
@@ -29,7 +31,11 @@ async def main() -> None:
         [
             ModelResponse(
                 tool_calls=[
-                    ToolCall(id="call_1", name="projects.read", arguments={"category": "game"})
+                    ToolCall(
+                        id="call_1",
+                        name="projects.read",
+                        arguments={"category": "game"},
+                    )
                 ]
             ),
             ModelResponse(text="Bir oyun bulundu: Cube Rivals."),

@@ -36,9 +36,18 @@ jobs:
       - run: npm test
       - run: npm run typecheck
       - run: python -m pip install -e "./backend[dev,release]"
-      - run: python -m ruff check backend
+      - run: python -m ruff format --check backend examples
+      - run: python -m ruff check backend examples
       - run: python -m mypy backend/src
+      - run: python -m mypy examples/simple-runtime/main.py
+      - run: python -m mypy examples/autonomous-single-agent/main.py
+      - run: python -m mypy examples/software-agent-team/main.py
+      - run: python -m mypy examples/speech-pipeline/main.py
+      - run: python -m mypy examples/validation-consumer/main.py
+      - run: python -m mypy examples/legal-domain-validation/main.py
       - run: python -m pytest backend/tests
+      - run: python examples/validation-consumer/main.py "$RUNNER_TEMP/todo-consumer"
+      - run: python examples/legal-domain-validation/main.py "$RUNNER_TEMP/legal-consumer"
       - run: python -m build backend
       - run: python -m twine check backend/dist/*
 

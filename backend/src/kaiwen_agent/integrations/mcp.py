@@ -42,6 +42,7 @@ def bind_mcp_tool(client: MCPClient, binding: MCPToolBinding) -> ToolDefinition:
         raise ValueError("MCP descriptor schema does not match the trusted input model")
     if binding.side_effect != "none" and not binding.requires_approval:
         raise ValueError("Side-effecting MCP tools must require approval")
+
     async def execute(context: AgentContext, arguments: BaseModel):
         del context
         return await client.call_tool(

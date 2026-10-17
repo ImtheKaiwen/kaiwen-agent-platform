@@ -81,9 +81,7 @@ class GeminiGenerateContentProvider:
         provider_names: dict[str, str] = {}
         if self.tool_strategy == ModelToolStrategy.NATIVE and tools:
             catalog, provider_names = provider_tool_catalog(tools)
-            config["tools"] = [
-                {"function_declarations": [item["function"] for item in catalog]}
-            ]
+            config["tools"] = [{"function_declarations": [item["function"] for item in catalog]}]
         response = await self._client.aio.models.generate_content(
             model=self.model,
             contents=contents,

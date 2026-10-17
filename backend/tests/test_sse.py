@@ -74,8 +74,6 @@ def test_in_memory_event_reads_require_exact_owner_scope() -> None:
                 session_id="shared-session",
             )
         )
-        assert [(event.tenant_id, event.user_id) for event in owned] == [
-            ("tenant_1", "user_1")
-        ]
+        assert [(event.tenant_id, event.user_id) for event in owned] == [("tenant_1", "user_1")]
 
     asyncio.run(scenario())

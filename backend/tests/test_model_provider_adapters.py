@@ -231,9 +231,7 @@ def test_text_only_ollama_never_exposes_or_accepts_tool_calls() -> None:
                     "message": {
                         "role": "assistant",
                         "content": "Only text",
-                        "tool_calls": [
-                            {"function": {"name": "greeting__create", "arguments": {}}}
-                        ],
+                        "tool_calls": [{"function": {"name": "greeting__create", "arguments": {}}}],
                     },
                 }
             ]
@@ -281,9 +279,7 @@ def test_gemini_disables_sdk_tool_execution_and_returns_proposals() -> None:
             )
         )
         client = SimpleNamespace(aio=SimpleNamespace(models=models))
-        response = await GeminiGenerateContentProvider(
-            model="gemini-test", client=client
-        ).respond(
+        response = await GeminiGenerateContentProvider(model="gemini-test", client=client).respond(
             AgentInput(text="Selamla"),
             context=AgentContext(session_id="session-1"),
             tools=[create_greeting],

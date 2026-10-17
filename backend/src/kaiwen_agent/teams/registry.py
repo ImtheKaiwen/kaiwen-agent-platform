@@ -19,9 +19,7 @@ class TeamDefinitionRegistry:
                 f"Team definition already registered: {definition.id}@{definition.version}"
             )
         self._definitions[key] = definition
-        self._latest[definition.id] = max(
-            definition.version, self._latest.get(definition.id, 0)
-        )
+        self._latest[definition.id] = max(definition.version, self._latest.get(definition.id, 0))
 
     def get(self, team_id: str, version: int | None = None) -> TeamDefinition:
         selected = version if version is not None else self._latest.get(team_id)

@@ -1364,12 +1364,16 @@ class SQLitePersistence:
             if row is None:
                 return None
             current = DurableApprovalRecord.model_validate_json(row["approval_json"])
-            if expected_binding is not None and (
-                current.conversation_id,
-                current.action_intent_id,
-                current.tool_name,
-                current.call_id,
-            ) != expected_binding:
+            if (
+                expected_binding is not None
+                and (
+                    current.conversation_id,
+                    current.action_intent_id,
+                    current.tool_name,
+                    current.call_id,
+                )
+                != expected_binding
+            ):
                 return None
             now = utc_now()
             updates: dict[str, object] = {"status": status, "updated_at": now}
@@ -1560,9 +1564,7 @@ def _validate_runtime_limit(limit: int) -> None:
         raise ValueError("limit must be between 1 and 1000")
 
 
-def _validate_runtime_run_transition(
-    current: RuntimeRunStatus, target: RuntimeRunStatus
-) -> None:
+def _validate_runtime_run_transition(current: RuntimeRunStatus, target: RuntimeRunStatus) -> None:
     allowed = {
         RuntimeRunStatus.CREATED: {
             RuntimeRunStatus.CREATED,

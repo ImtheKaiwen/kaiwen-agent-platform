@@ -17,17 +17,22 @@ jobs:
         with:
           python-version: "3.12"
       - run: python -m pip install -e ".[dev]"
-      - run: python -m ruff check .
+      - run: python -m ruff format --check . ../examples
+      - run: python -m ruff check . ../examples
       - run: python -m mypy src/kaiwen_agent
       - run: python -m mypy ../examples/simple-runtime/main.py
       - run: python -m mypy ../examples/autonomous-single-agent/main.py
       - run: python -m mypy ../examples/software-agent-team/main.py
       - run: python -m mypy ../examples/speech-pipeline/main.py
+      - run: python -m mypy ../examples/validation-consumer/main.py
+      - run: python -m mypy ../examples/legal-domain-validation/main.py
       - run: python -m pytest
       - run: python ../examples/simple-runtime/main.py
       - run: python ../examples/autonomous-single-agent/main.py
       - run: python ../examples/software-agent-team/main.py
       - run: python ../examples/speech-pipeline/main.py
+      - run: python ../examples/validation-consumer/main.py "$RUNNER_TEMP/todo-consumer"
+      - run: python ../examples/legal-domain-validation/main.py "$RUNNER_TEMP/legal-consumer"
 
   node:
     runs-on: ubuntu-latest

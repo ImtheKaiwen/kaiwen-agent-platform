@@ -139,10 +139,7 @@ class WorkflowController:
                             prior_plan=current_plan,
                             task_failures=failures,
                         ),
-                        allow=(
-                            cycle < self.limits.max_cycles
-                            and repair_tracker.request_replan()
-                        ),
+                        allow=(cycle < self.limits.max_cycles and repair_tracker.request_replan()),
                     )
                 except asyncio.CancelledError:
                     raise
