@@ -3,6 +3,8 @@
 Coding Kits are opt-in. Importing `kaiwen_agent` alone does not load prompts, tools,
 providers, files, processes or network clients.
 
+For the additive low-boilerplate facade, see [Simple Coding API](SIMPLE_API.md).
+
 ## Single agent
 
 Create the normal platform registries and an `AgentFactory`, register a host-owned

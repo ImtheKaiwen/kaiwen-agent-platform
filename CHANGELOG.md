@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## 0.7.0a1 — 2026-10-18
+
+- Add the optional `CodingKit` Simple Coding API for lazy local or authenticated-host
+  chat, explicit allowlisted actions, durable solo workflows and explicitly bound
+  team workflows without replacing existing runtime authorities.
+- Add owner/workspace-scoped durable run handles, truthful lifecycle capability
+  errors, provider/tool/locality/sandbox/approval preflight, and runnable deterministic
+  consumer examples.
+
 ## 0.6.0a1 — 2026-10-17
 
 - Add opt-in first-party Coding Kits with packaged English role prompts, adaptive

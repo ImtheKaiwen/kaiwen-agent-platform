@@ -28,6 +28,11 @@ jobs:
       - run: python -m mypy --no-incremental ../examples/legal-domain-validation/main.py
       - run: python -m mypy --no-incremental ../examples/coding-kit-fake/main.py
       - run: python -m mypy --no-incremental ../examples/coding-kit-openai/main.py
+      - run: python -m mypy --no-incremental ../examples/coding-simple-chat/main.py
+      - run: python -m mypy --no-incremental ../examples/coding-simple-agent/main.py
+      - run: python -m mypy --no-incremental ../examples/coding-simple-team/main.py
+      - run: python -m mypy --no-incremental ../examples/coding-simple-ollama/main.py
+      - run: python -m mypy --no-incremental ../examples/coding-simple-custom-host/main.py
       - run: python -m pytest
       - run: python ../examples/simple-runtime/main.py
       - run: python ../examples/autonomous-single-agent/main.py
@@ -35,6 +40,10 @@ jobs:
       - run: python ../examples/speech-pipeline/main.py
       - run: python ../examples/validation-consumer/main.py "$RUNNER_TEMP/todo-consumer"
       - run: python ../examples/legal-domain-validation/main.py "$RUNNER_TEMP/legal-consumer"
+      - run: python ../examples/coding-simple-chat/main.py
+      - run: python ../examples/coding-simple-agent/main.py
+      - run: python ../examples/coding-simple-team/main.py
+      - run: python ../examples/coding-simple-custom-host/main.py
 
   node:
     runs-on: ubuntu-latest

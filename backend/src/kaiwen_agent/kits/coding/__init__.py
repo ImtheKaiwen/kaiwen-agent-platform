@@ -12,6 +12,7 @@ from kaiwen_agent.kits.coding.documentation import (
     classify_documentation_tier,
     propose_documentation,
 )
+from kaiwen_agent.kits.coding.facade import CodingKit, SimpleCodingAgent, SimpleCodingTeam
 from kaiwen_agent.kits.coding.factory import (
     CodingAgent,
     CodingKitConfig,
@@ -19,6 +20,7 @@ from kaiwen_agent.kits.coding.factory import (
     CodingPreflightIssue,
     CodingPreflightResult,
 )
+from kaiwen_agent.kits.coding.handles import CodingRunHandle, CodingRunResult
 from kaiwen_agent.kits.coding.observability import (
     CodingEventEmitter,
     CodingEventKind,
@@ -55,6 +57,14 @@ from kaiwen_agent.kits.coding.providers import (
     register_coding_provider,
 )
 from kaiwen_agent.kits.coding.revision import BoundedCodingRevisionPlanner
+from kaiwen_agent.kits.coding.simple_config import (
+    CodingExecutionBinding,
+    CodingPreflightMode,
+    CodingRunControl,
+    CodingSimpleAPIError,
+    CodingTeamBinding,
+    CodingTeamLauncher,
+)
 from kaiwen_agent.kits.coding.standards import (
     coding_standards_packs,
     install_coding_standards,
@@ -78,20 +88,29 @@ __all__ = [
     "CodingAgent",
     "CodingKitConfig",
     "CodingKitFactory",
+    "CodingKit",
+    "CodingExecutionBinding",
     "CodingEventEmitter",
     "CodingEventKind",
     "CodingMode",
     "CodingPlanningError",
     "CodingPreflightIssue",
     "CodingPreflightResult",
+    "CodingPreflightMode",
     "CodingProfile",
     "CodingProfileSettings",
     "CodingProviderCatalog",
     "CodingProviderPreset",
     "CodingRoleConfig",
     "CodingRunManifest",
+    "CodingRunControl",
+    "CodingRunHandle",
+    "CodingRunResult",
+    "CodingSimpleAPIError",
     "CodingTeamConfig",
     "CodingTeamFactory",
+    "CodingTeamBinding",
+    "CodingTeamLauncher",
     "ConfiguredCodingTeam",
     "CodingConversationPreferences",
     "CodingUserLanguage",
@@ -108,6 +127,8 @@ __all__ = [
     "ProjectDiscovery",
     "StructuredPlanningBackend",
     "RoleUsageSummary",
+    "SimpleCodingAgent",
+    "SimpleCodingTeam",
     "BoundedCodingRevisionPlanner",
     "classify_documentation_tier",
     "coding_prompt_definitions",
