@@ -96,13 +96,13 @@ class WorkspaceWriteInput(WorkspaceReadInput):
 
 
 def workspace_tools(filesystem: WorkspaceFilesystem) -> tuple[ToolDefinition, ToolDefinition]:
-    async def read(context: AgentContext, arguments: BaseModel):
+    async def read(context: AgentContext, arguments: BaseModel) -> dict[str, str]:
         if not isinstance(arguments, WorkspaceReadInput):
             raise TypeError("Workspace read arguments were not validated")
         _require_workspace(context, filesystem.workspace_id)
         return {"content": filesystem.read_text(arguments.root, arguments.path)}
 
-    async def write(context: AgentContext, arguments: BaseModel):
+    async def write(context: AgentContext, arguments: BaseModel) -> dict[str, int]:
         if not isinstance(arguments, WorkspaceWriteInput):
             raise TypeError("Workspace write arguments were not validated")
         _require_workspace(context, filesystem.workspace_id)

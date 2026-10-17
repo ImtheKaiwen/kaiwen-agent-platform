@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Literal, Protocol
+from typing import Any, Literal, Protocol, cast
 from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -100,7 +100,7 @@ class AgentEvent(BaseModel):
     @field_validator("payload", mode="after")
     @classmethod
     def redact_secrets(cls, payload: dict[str, Any]) -> dict[str, Any]:
-        return _EVENT_REDACTOR.redact(payload)
+        return cast(dict[str, Any], _EVENT_REDACTOR.redact(payload))
 
 
 def redact_agent_event(event: AgentEvent) -> AgentEvent:

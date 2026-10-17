@@ -43,7 +43,7 @@ def bind_mcp_tool(client: MCPClient, binding: MCPToolBinding) -> ToolDefinition:
     if binding.side_effect != "none" and not binding.requires_approval:
         raise ValueError("Side-effecting MCP tools must require approval")
 
-    async def execute(context: AgentContext, arguments: BaseModel):
+    async def execute(context: AgentContext, arguments: BaseModel) -> Any:
         del context
         return await client.call_tool(
             binding.descriptor.name,

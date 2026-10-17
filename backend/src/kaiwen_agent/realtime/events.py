@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import StrEnum
-from typing import Any
+from typing import Any, cast
 from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -65,7 +65,7 @@ class RealtimeRuntimeEvent(BaseModel):
     @field_validator("payload", mode="after")
     @classmethod
     def redact_secrets(cls, payload: dict[str, Any]) -> dict[str, Any]:
-        return _EVENT_REDACTOR.redact(payload)
+        return cast(dict[str, Any], _EVENT_REDACTOR.redact(payload))
 
 
 def redact_realtime_event(event: RealtimeRuntimeEvent) -> RealtimeRuntimeEvent:
