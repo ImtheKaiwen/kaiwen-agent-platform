@@ -2,15 +2,18 @@
 
 ## Decision
 
-**Versioned and approved for publication.** There are no known critical or
-high-severity runtime failures, the bounded live OpenAI check passes, and GitHub CI
-run `38996316278` is green for both Python and Node jobs. The release workflow must
-complete successfully before the packages are considered published.
+**Python release complete; npm release blocked by registry authentication.** There
+are no known critical or high-severity runtime failures, the bounded live OpenAI
+check passes, and GitHub CI run `38996905653` is green for both Python and Node jobs.
+PyPI `kaiwen-agent 0.5.0a1` and GitHub prerelease `v0.5.0a1` are published and the
+PyPI artifact passed a clean-environment installation smoke test.
 
 ## Mandatory before release
 
-1. Publish Python `0.5.0a1` and npm `0.2.0-alpha.1` through the trusted release
-   workflow, then align the Git tag and GitHub Release with the Python version.
+1. Configure npm trusted publishing for `.github/workflows/release.yml` in the
+   `npm` environment, or replace the expired/missing npm authentication. Then rerun
+   the workflow with only npm publishing enabled. Registry publication currently
+   fails before either `0.2.0-alpha.1` package is uploaded.
 2. Review the low-severity development-only `esbuild` advisory. A forced upgrade is
    not recommended until the project raises its Node support floor enough for the
    fixed `tsup` major, or an upstream compatible release becomes available.
