@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import asyncio
 import tempfile
+from collections.abc import Sequence
 from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
 from kaiwen_agent.artifacts import ArtifactManager
+from kaiwen_agent.context import AgentContext
 from kaiwen_agent.control import RunControl
 from kaiwen_agent.kits.coding import (
     CodingExecutionBinding,
@@ -19,8 +21,10 @@ from kaiwen_agent.persistence import SQLitePersistence
 from kaiwen_agent.quality import CompletionGate, VerifierRegistry
 from kaiwen_agent.runtime import DurableRunManager
 from kaiwen_agent.standards import StandardResolution, StandardsRegistry
-from kaiwen_agent.tasks import TaskScheduler
-from kaiwen_agent.workers import FunctionWorker, WorkerRegistry
+from kaiwen_agent.tasks import AgentTask, TaskScheduler
+from kaiwen_agent.tools.definition import ToolDefinition
+from kaiwen_agent.types import AgentInput, ModelResponse, ToolResult
+from kaiwen_agent.workers import FunctionWorker, TaskExecutionContext, WorkerRegistry
 from kaiwen_agent.workflow import WorkflowCompiler, WorkflowController
 
 
@@ -42,7 +46,7 @@ async def main() -> None:
         runs = DurableRunManager(store)
         workers = WorkerRegistry()
 
-        async def execute(task, context):
+        async def execute(task: AgentTask, context: TaskExecutionContext) -> dict[str, Any]:
             await context.checkpoint(state={"task": task.id, "verified": True})
             return {"verified": True}
 
@@ -98,8 +102,16 @@ async def main() -> None:
 
 
 class _UnusedProvider:
-    async def respond(self, *args, **kwargs):
-        del args, kwargs
+    async def respond(
+        self,
+        agent_input: AgentInput,
+        *,
+        context: AgentContext,
+        tools: Sequence[ToolDefinition],
+        tool_results: Sequence[ToolResult],
+        provider_state: Any | None,
+    ) -> ModelResponse:
+        del agent_input, context, tools, tool_results, provider_state
         raise AssertionError("The deterministic workflow should not invoke chat")
 
 
