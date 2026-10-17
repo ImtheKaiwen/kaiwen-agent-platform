@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.5.0a1 — 2026-10-17
+
 - Add deterministic lifecycle, central policy, bounded context, short-term and
   policy-gated long-term memory foundations.
 - Add background jobs over the existing Task Runtime, bounded subagent delegation,

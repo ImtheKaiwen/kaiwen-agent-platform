@@ -2,19 +2,16 @@
 
 ## Decision
 
-**Technically ready for versioning and explicit publication approval.** There are no
-known critical or high-severity runtime failures, the bounded live OpenAI check passes,
-and GitHub CI run `38996229262` is green for both Python and Node jobs. Public package
-publication has not been started.
+**Versioned and approved for publication.** There are no known critical or
+high-severity runtime failures, the bounded live OpenAI check passes, and GitHub CI
+run `38996316278` is green for both Python and Node jobs. The release workflow must
+complete successfully before the packages are considered published.
 
 ## Mandatory before release
 
-1. Align release metadata. PyPI currently publishes `kaiwen-agent 0.4.0a1`, while the
-   latest Git tag/GitHub Release remains `v0.3.0a1`.
-2. Choose and apply versions before dispatching the release workflow. Recommended:
-   Python `0.5.0a1` for the substantial additive runtime APIs, and npm
-   `0.2.0-alpha.1` for the additive protocol/UI changes.
-3. Review the low-severity development-only `esbuild` advisory. A forced upgrade is
+1. Publish Python `0.5.0a1` and npm `0.2.0-alpha.1` through the trusted release
+   workflow, then align the Git tag and GitHub Release with the Python version.
+2. Review the low-severity development-only `esbuild` advisory. A forced upgrade is
    not recommended until the project raises its Node support floor enough for the
    fixed `tsup` major, or an upstream compatible release becomes available.
 
