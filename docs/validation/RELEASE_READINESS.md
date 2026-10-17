@@ -2,19 +2,16 @@
 
 ## Decision
 
-**Python release complete; npm release blocked by registry authentication.** There
-are no known critical or high-severity runtime failures, the bounded live OpenAI
-check passes, and GitHub CI run `38996905653` is green for both Python and Node jobs.
-PyPI `kaiwen-agent 0.5.0a1` and GitHub prerelease `v0.5.0a1` are published and the
-PyPI artifact passed a clean-environment installation smoke test.
+**Release complete.** There are no known critical or high-severity runtime failures,
+the bounded live OpenAI check passes, and release workflow run `39000220914` passed
+verification before publishing both npm packages. PyPI `kaiwen-agent 0.5.0a1`, npm
+`@imthekaiwen/agent-protocol 0.2.0-alpha.1`, npm `@imthekaiwen/agent-ui
+0.2.0-alpha.1`, and GitHub prerelease `v0.5.0a1` are published. Clean-environment
+Python and TypeScript consumer smoke tests passed against the registry artifacts.
 
-## Mandatory before release
+## Remaining non-blocking follow-up
 
-1. Configure npm trusted publishing for `.github/workflows/release.yml` in the
-   `npm` environment, or replace the expired/missing npm authentication. Then rerun
-   the workflow with only npm publishing enabled. Registry publication currently
-   fails before either `0.2.0-alpha.1` package is uploaded.
-2. Review the low-severity development-only `esbuild` advisory. A forced upgrade is
+1. Review the low-severity development-only `esbuild` advisory. A forced upgrade is
    not recommended until the project raises its Node support floor enough for the
    fixed `tsup` major, or an upstream compatible release becomes available.
 
@@ -34,11 +31,12 @@ checks and the isolated Todo/legal validations.
 
 ## Post-publish verification
 
-After explicit approval and workflow completion:
+Completed:
 
-1. create a new empty virtual environment;
-2. install the exact PyPI version;
-3. run minimal, autonomous, team, and consumer smoke tests;
-4. install both exact npm versions into a clean consumer project;
-5. build/typecheck that project;
-6. confirm PyPI, npm, Git tag, GitHub Release, and changelog versions match.
+1. installed exact PyPI `0.5.0a1` in a new virtual environment;
+2. imported the public `AgentRuntime` API and ran `pip check`;
+3. installed both exact npm `0.2.0-alpha.1` packages in a clean consumer project;
+4. built the strict TypeScript consumer and executed its generated JavaScript;
+5. confirmed both npm packages expose `alpha` as `0.2.0-alpha.1` while preserving
+   the prior `latest` tag;
+6. confirmed PyPI, npm, Git tag, GitHub Release, and changelog versions align.
