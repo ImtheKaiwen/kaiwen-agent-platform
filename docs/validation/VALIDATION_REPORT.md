@@ -9,8 +9,9 @@ live-provider verification.
 - Python 3.12.13, Node.js 22.16.0, npm 10.9.2.
 - A root `.env` exists and is ignored by Git. Package archives contain no `.env`,
   bytecode, validation output, or private planning files.
-- `OPENAI_API_KEY` is defined, but the low-token live smoke reached OpenAI and was
-  rejected with HTTP 401 (`invalid_api_key`). No key material is recorded here.
+- `OPENAI_API_KEY` is defined. The low-token live smoke completed with
+  `gpt-5.6-luna`, exercised `connectivity.check`, returned the expected
+  `KAIWEN_AGENT_OK` marker, and used 233 tokens. No key material is recorded here.
 - Neither `GEMINI_API_KEY` nor `GOOGLE_API_KEY` is defined.
 - `OLLAMA_HOST` is not defined, and no Ollama live service/model was available.
 
@@ -76,10 +77,10 @@ human approval resulted in zero external-action executions.
 
 ## Live-provider status
 
-- OpenAI: **failed due to environment credentials**. The request reached the real
-  endpoint but authentication failed. Contract, tool continuation, structured tool
-  proposal, sideband, streaming-event, timeout/failover, and state-isolation behavior
-  remain covered by deterministic tests.
+- OpenAI: **pass**. A real low-token Responses request completed with a tool call and
+  the expected final response. Contract, tool continuation, structured tool proposal,
+  sideband, streaming-event, timeout/failover, and state-isolation behavior are also
+  covered by deterministic tests.
 - Gemini: **not run** because no credential is configured. Adapter contract tests pass.
 - Ollama: **not run** because no host/model is configured. Native-tool and text-only
   capability tests pass.

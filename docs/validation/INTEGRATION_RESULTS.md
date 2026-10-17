@@ -13,8 +13,8 @@ history handling, and provider continuation isolation.
 Workflow integration executed dependent tasks, checkpoints, bounded retries,
 replanning, quality repair, and terminal-state persistence. The Todo consumer ran
 without interactive “continue” prompts and produced usable files plus passing tests.
-Because the configured OpenAI credential is invalid, model-generated planning and
-code were not claimed as live-validated.
+The OpenAI live smoke validated a bounded real tool round trip. The deterministic
+Todo worker flow still does not claim that an LLM independently authored the project.
 
 ### C. Agent team
 
@@ -60,7 +60,7 @@ completion. Scheduler and tool retry limits are independently bounded.
 
 | Provider | Deterministic coverage | Live result |
 | --- | --- | --- |
-| OpenAI Responses | message/tool serialization, stateless and stored continuation, tool outputs, state isolation, structured schemas, failover rules | Authentication failed with 401 |
+| OpenAI Responses | message/tool serialization, stateless and stored continuation, tool outputs, state isolation, structured schemas, failover rules | Pass; bounded real tool round trip, 233 tokens |
 | Gemini | provider construction, native proposal conversion, central tool execution boundary | Not run; key missing |
 | Ollama | native proposal conversion, explicit continuation, text-only capability denial | Not run; host/model missing |
 | OpenAI Live | session configuration, normalized events, sideband delegation, approval boundary | No real media session run |

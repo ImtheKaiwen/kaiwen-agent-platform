@@ -19,7 +19,7 @@
 | Token/cost budget accounting | budget and production-control tests | Pass | None |
 | Provider failover and locality | `test_model_failover.py` | Pass | None |
 | OpenAI Responses adapter | contract tests | Pass | Live auth unverified |
-| OpenAI live request | `examples/openai-smoke/main.py` | Environment failure | Blocks full live-provider sign-off |
+| OpenAI live request | `examples/openai-smoke/main.py`; 233-token tool round trip | Pass | None |
 | Gemini adapter | contract tests | Pass | Live behavior unverified |
 | Ollama adapter | contract tests | Pass | Live behavior unverified |
 | Realtime/OpenAI Live sideband | `test_openai_live_provider.py`, realtime suites | Pass | Real media session unverified |
