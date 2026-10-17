@@ -2,22 +2,19 @@
 
 ## Decision
 
-**Ready for a release-candidate push, but not yet for public package publication.**
-There are no known critical or high-severity runtime failures, and the bounded live
-OpenAI check now passes. Remote CI and release metadata still need to be completed.
+**Technically ready for versioning and explicit publication approval.** There are no
+known critical or high-severity runtime failures, the bounded live OpenAI check passes,
+and GitHub CI run `38996229262` is green for both Python and Node jobs. Public package
+publication has not been started.
 
 ## Mandatory before release
 
-1. Commit and push the validated changes, then require a green GitHub CI run on the
-   exact release commit. The two latest remote CI runs are historical failures; both
-   stopped at strict mypy in `openai_live_sideband.py`. Current local strict mypy is
-   green, but it has not yet been confirmed by remote CI.
-2. Align release metadata. PyPI currently publishes `kaiwen-agent 0.4.0a1`, while the
+1. Align release metadata. PyPI currently publishes `kaiwen-agent 0.4.0a1`, while the
    latest Git tag/GitHub Release remains `v0.3.0a1`.
-3. Choose and apply versions before dispatching the release workflow. Recommended:
+2. Choose and apply versions before dispatching the release workflow. Recommended:
    Python `0.5.0a1` for the substantial additive runtime APIs, and npm
    `0.2.0-alpha.1` for the additive protocol/UI changes.
-4. Review the low-severity development-only `esbuild` advisory. A forced upgrade is
+3. Review the low-severity development-only `esbuild` advisory. A forced upgrade is
    not recommended until the project raises its Node support floor enough for the
    fixed `tsup` major, or an upstream compatible release becomes available.
 

@@ -30,6 +30,7 @@ live-provider verification.
 | `npm test` | Pass; 7 tests |
 | `npm run typecheck` | Pass |
 | `npm run pack:check` | Pass |
+| GitHub CI on Linux | Pass; run `38996229262`, Python and Node jobs |
 | Fresh wheel and sdist build | Pass |
 | `twine check` | Pass for wheel and sdist |
 | Fresh virtual environment install + `pip check` | Pass |
@@ -74,6 +75,12 @@ human approval resulted in zero external-action executions.
    The affected component is a development build server, not shipped runtime code.
    The fixed `tsup` major requires a newer Node range than this repository currently
    promises, so no incompatible forced upgrade was made.
+5. Unpinned formatter/type-checker versions produced platform-dependent CI results.
+   Ruff and mypy are now pinned, mypy runs without incremental cache in CI, and the
+   resulting Linux-only typing findings were fixed.
+6. A polling-watch test compared a caller timestamp with a later creation timestamp.
+   The test now polls from the watch's actual due time and passed 25 consecutive local
+   repetitions plus the Linux CI suite.
 
 ## Live-provider status
 
