@@ -149,7 +149,7 @@ def test_event_watch_resumes_objective_and_wakes_agent() -> None:
 
 def test_polling_watch_reschedules_then_matches() -> None:
     async def scenario() -> None:
-        now = utc_now()
+        created_at = utc_now()
         engine = WatchEngine(wakeups=WakeupManager(store=InMemoryLifecycleStore()))
         watch = await engine.create(
             watch_context(),
@@ -158,9 +158,11 @@ def test_polling_watch_reschedules_then_matches() -> None:
                 condition=WatchCondition(field="progress", value=100),
                 strategy=WatchStrategy.POLLING,
                 polling_interval_seconds=30,
-                expires_at=now + timedelta(hours=1),
+                expires_at=created_at + timedelta(hours=1),
             ),
         )
+        now = watch.next_check_at
+        assert now is not None
         values = iter([{"progress": 50}, {"progress": 100}])
 
         async def probe(_watch: object) -> dict[str, int]:
